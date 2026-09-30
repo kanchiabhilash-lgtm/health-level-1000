@@ -12,6 +12,9 @@
 <meta name="apple-mobile-web-app-title" content="HL1000">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <title>Health Level 1000 — Gamified Fitness Ecosystem</title>
 <style>
 :root{
@@ -564,6 +567,7 @@ function finishLevel(){
     if(lvNew>S.level){ S.level=lvNew; }
   }
   save(); confetti(); stopTimer();
+  if(typeof cloudPush === 'function') cloudPush();
   W.level=null; W.phase='idle';
   VIEW='dash'; render();
   if(first && S.level>lv.n) setTimeout(()=>toast('LEVEL UP — '+S.level),600);
@@ -927,14 +931,42 @@ function viewDiet(){
 function viewMe(){
   const t=TRACKS[activeTrack()], r=rankOf(S.level);
   const done=Object.keys(S.history).length;
+
+  let cloudHtml = '';
+  if(fbUser){
+    cloudHtml = '<div class="card" style="border-color:#2fd6a055;background:linear-gradient(160deg,#142b26,#111729)">'
+      + '<div class="row w"><span class="pill ok">🟢 Cloud Sync Active</span><button class="btn ghost sm" data-act="g-signout" style="padding:4px 8px;font-size:11px">Sign Out</button></div>'
+      + '<div class="row" style="margin-top:10px;gap:10px">'
+      +   (fbUser.photoURL ? '<img src="'+esc(fbUser.photoURL)+'" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--line)" alt="Avatar">' : '<div style="width:38px;height:38px;border-radius:50%;background:var(--trk);display:grid;place-items:center;font-weight:700">👤</div>')
+      +   '<div class="grow"><b style="font-size:14px">'+esc(fbUser.displayName || 'Google User')+'</b><div class="mut" style="font-size:11.5px">'+esc(fbUser.email || '')+'</div></div>'
+      + '</div>'
+      + '<div class="row w mut" style="margin-top:10px;font-size:11.5px"><span>Status: '+(syncStatus==='syncing'?'🔄 Syncing...':(syncStatus==='error'?'⚠️ Sync error':'✅ In Sync'))+'</span><span>'+(lastSyncTime?'Synced at '+lastSyncTime:'Just now')+'</span></div>'
+      + '<div class="row" style="gap:8px;margin-top:10px">'
+      +   '<button class="btn sec sm grow" data-act="cloud-pull">📥 Restore from Cloud</button>'
+      +   '<button class="btn good sm grow" data-act="cloud-push">☁️ Backup to Cloud</button>'
+      + '</div>'
+      + '</div>';
+  } else {
+    cloudHtml = '<div class="card">'
+      + '<div class="row w"><h2 style="margin:0">☁️ Google Account &amp; Sync</h2><span class="pill t">100% Free</span></div>'
+      + '<p class="mut" style="margin:8px 0">Sign in with your Google account to automatically backup workouts and sync your progress across any phone, tablet, or browser.</p>'
+      + '<button class="btn grow" data-act="g-signin" style="background:#fff;color:#1a2238;font-weight:700;box-shadow:0 4px 16px rgba(255,255,255,0.15);margin-top:6px;gap:10px">'
+      +   '<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>'
+      +   'Sign in with Google'
+      + '</button>'
+      + '<div class="row w mut" style="margin-top:8px"><a href="#" data-act="fb-config" style="font-size:11.5px;color:var(--dim)">⚙️ Firebase Cloud Settings</a><span style="font-size:11px">Firebase Spark Free</span></div>'
+      + '</div>';
+  }
+
   return '<h1>You</h1>'
+  + cloudHtml
   +'<div class="card"><div class="row w"><span class="pill t">'+t.icon+' '+esc(t.name)+'</span><span class="pill">Rank '+esc(r.name)+'</span></div>'
   +'<p style="margin-top:8px">'+esc(t.goal)+'</p>'
   +'<div class="row" style="gap:8px"><button class="btn sec sm grow" data-act="track">Change goal</button></div>'
   +'<div style="margin-top:14px"><label class="mut">Weight (kg)</label><input id="bw" type="number" inputmode="decimal" value="'+esc(S.bw)+'" placeholder="e.g. 72" style="margin-top:4px"></div>'
   +'<div style="margin-top:10px"><label class="mut">Height (cm)</label><input id="ht" type="number" inputmode="numeric" value="'+esc(S.height)+'" placeholder="e.g. 170" style="margin-top:4px"></div>'
   +'<button class="btn sm" data-act="savebody" style="margin-top:10px">Save body data</button>'
-  + (S.bw&&S.height?'<p class="mut" style="margin-top:8px">BMI ≈ '+(S.weight/ (S.height/100*S.height/100)).toFixed(1)+'. In India, a BMI under 20 is often undernutrition, not fitness — read it with your doctor, not with Google.</p>':'')
+  + (S.bw&&S.height?'<p class="mut" style="margin-top:8px">BMI ≈ '+(S.bw/ (S.height/100*S.height/100)).toFixed(1)+'. In India, a BMI under 20 is often undernutrition, not fitness — read it with your doctor, not with Google.</p>':'')
   +'</div>'
   +'<div class="card"><h2>Stats</h2><table>'
   +'<tr><td>Level</td><td><b>'+S.level+' / 1,000</b></td></tr>'
@@ -991,6 +1023,11 @@ document.addEventListener('click',function(ev){
   else if(a==='savebody'){ S.bw=($('#bw')||{}).value||''; S.height=($('#ht')||{}).value||''; save(); toast('Saved'); render(); }
   else if(a==='export'){ exportData(); }
   else if(a==='import'){ importData(); }
+  else if(a==='g-signin'){ googleSignIn(); }
+  else if(a==='g-signout'){ googleSignOut(); }
+  else if(a==='cloud-push'){ cloudPush(); toast('Backing up to cloud...'); }
+  else if(a==='cloud-pull'){ cloudPull(); toast('Restoring from cloud...'); }
+  else if(a==='fb-config'){ showFirebaseConfigModal(); }
   else if(a==='reset'){ if(confirm('Erase all progress? This cannot be undone.')){ localStorage.removeItem(KEY); S=blank; VIEW='dash'; render(); } }
 });
 function trackPicker(){
@@ -1049,6 +1086,182 @@ function importData(){
   input.click();
 }
 
+/* ==========================================================================
+   9. GOOGLE AUTH & CLOUD SYNC (Firebase Spark - 100% Free)
+   ========================================================================== */
+let fbUser = null, fbAuth = null, fbDb = null, syncStatus = 'idle', lastSyncTime = null;
+
+function getFbConfig(){
+  try {
+    const custom = JSON.parse(localStorage.getItem('hl1000.fbConfig'));
+    if(custom && custom.apiKey && custom.projectId) return custom;
+  } catch(e){}
+  return null;
+}
+
+function initFirebase(){
+  if(typeof firebase === 'undefined') return;
+  const cfg = getFbConfig();
+  if(!cfg) return;
+  try {
+    if(!firebase.apps.length){
+      firebase.initializeApp(cfg);
+    }
+    fbAuth = firebase.auth();
+    fbDb = firebase.firestore();
+    fbAuth.onAuthStateChanged(function(u){
+      fbUser = u;
+      if(u){
+        syncStatus = 'synced';
+        cloudPull();
+      } else {
+        syncStatus = 'idle';
+      }
+      render();
+    });
+  } catch(err){
+    console.error('Firebase init error:', err);
+    syncStatus = 'error';
+  }
+}
+
+function googleSignIn(){
+  if(typeof firebase === 'undefined'){
+    toast('Firebase SDK unavailable or offline');
+    return;
+  }
+  const cfg = getFbConfig();
+  if(!cfg){
+    showFirebaseConfigModal();
+    return;
+  }
+  if(!fbAuth){
+    initFirebase();
+  }
+  if(!fbAuth){
+    toast('Please configure your free Firebase project first');
+    showFirebaseConfigModal();
+    return;
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  syncStatus = 'syncing';
+  render();
+  fbAuth.signInWithPopup(provider).then(function(res){
+    fbUser = res.user;
+    toast('Welcome, ' + (fbUser.displayName || fbUser.email));
+    cloudPull();
+  }).catch(function(err){
+    console.error('Sign in error:', err);
+    syncStatus = 'error';
+    if(err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user'){
+      fbAuth.signInWithRedirect(provider).catch(function(e2){
+        toast('Login error: ' + e2.message);
+      });
+    } else {
+      toast('Login: ' + err.message);
+    }
+    render();
+  });
+}
+
+function googleSignOut(){
+  if(fbAuth){
+    fbAuth.signOut().then(function(){
+      fbUser = null;
+      syncStatus = 'idle';
+      toast('Signed out from Google');
+      render();
+    });
+  }
+}
+
+function cloudPush(){
+  if(!fbUser || !fbDb) return;
+  syncStatus = 'syncing';
+  render();
+  const payload = Object.assign({}, S, {
+    clientUpdatedAt: new Date().toISOString()
+  });
+  fbDb.collection('users').doc(fbUser.uid).set(payload, { merge: true }).then(function(){
+    syncStatus = 'synced';
+    lastSyncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    render();
+  }).catch(function(err){
+    console.error('Cloud push failed:', err);
+    syncStatus = 'error';
+    render();
+  });
+}
+
+function cloudPull(){
+  if(!fbUser || !fbDb) return;
+  syncStatus = 'syncing';
+  render();
+  fbDb.collection('users').doc(fbUser.uid).get().then(function(doc){
+    if(doc.exists){
+      const remote = doc.data();
+      if(remote.level > S.level || (remote.xp > S.xp && remote.level >= S.level)){
+        S = Object.assign({}, S, remote);
+        save();
+        setTrackVar();
+        toast('Cloud state restored! Level ' + S.level);
+      } else {
+        cloudPush();
+      }
+    } else {
+      cloudPush();
+    }
+    syncStatus = 'synced';
+    lastSyncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    render();
+  }).catch(function(err){
+    console.error('Cloud pull failed:', err);
+    syncStatus = 'error';
+    render();
+  });
+}
+
+function showFirebaseConfigModal(){
+  const cur = getFbConfig() || {};
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = '<div class="in">'
+    + '<h2>🔥 Free Cloud Sync Setup</h2>'
+    + '<p class="mut">Connect your 100% free Google Firebase project to enable 1-click Google Sign-In & automatic multi-device cloud sync.</p>'
+    + '<div class="note ok-note" style="margin:10px 0;font-size:12px"><b>100% Free Forever:</b> Firebase Spark plan requires no credit card and provides 50,000 free reads & writes per day.</div>'
+    + '<div style="margin-top:10px"><label class="mut" style="font-size:11px">Firebase API Key</label><input id="fb_api" value="' + esc(cur.apiKey || '') + '" placeholder="AIzaSy..."></div>'
+    + '<div style="margin-top:8px"><label class="mut" style="font-size:11px">Project ID</label><input id="fb_proj" value="' + esc(cur.projectId || '') + '" placeholder="my-health-app"></div>'
+    + '<div style="margin-top:8px"><label class="mut" style="font-size:11px">Auth Domain</label><input id="fb_auth" value="' + esc(cur.authDomain || '') + '" placeholder="my-health-app.firebaseapp.com"></div>'
+    + '<div style="margin-top:8px"><label class="mut" style="font-size:11px">App ID</label><input id="fb_appid" value="' + esc(cur.appId || '') + '" placeholder="1:123456789:web:abc"></div>'
+    + '<div class="row" style="gap:8px;margin-top:14px">'
+    +   '<button class="btn grow" data-fbsave="1">Save &amp; Connect</button>'
+    +   '<button class="btn sec" data-close="1">Cancel</button>'
+    + '</div>'
+    + '<p class="mut" style="font-size:11px;margin-top:10px;line-height:1.5">Create a free project at <a href="https://console.firebase.google.com" target="_blank" rel="noopener">console.firebase.google.com</a>, enable Google under Authentication, and copy Web app settings here.</p>'
+    + '</div>';
+  document.body.appendChild(m);
+  m.addEventListener('click', function(ev){
+    if(ev.target.closest('[data-close]')){ m.remove(); return; }
+    if(ev.target.closest('[data-fbsave]')){
+      const cfg = {
+        apiKey: ($('#fb_api', m) || {}).value.trim(),
+        projectId: ($('#fb_proj', m) || {}).value.trim(),
+        authDomain: ($('#fb_auth', m) || {}).value.trim() || (($('#fb_proj', m) || {}).value.trim() + '.firebaseapp.com'),
+        appId: ($('#fb_appid', m) || {}).value.trim()
+      };
+      if(!cfg.apiKey || !cfg.projectId){
+        toast('Please enter API Key and Project ID');
+        return;
+      }
+      localStorage.setItem('hl1000.fbConfig', JSON.stringify(cfg));
+      m.remove();
+      initFirebase();
+      toast('Firebase config saved! Now tap Google Sign-In.');
+      render();
+    }
+  });
+}
+
 /* onboarding */
 function onboard(){
   const m=document.createElement('div'); m.className='modal';
@@ -1068,6 +1281,7 @@ if(!S.track) S.track='recomp';
 setTrackVar();
 render();
 if(!S.onboarded) setTimeout(onboard,300);
+setTimeout(initFirebase, 400);
 
 /* ---------- PWA: offline shell + install shortcuts + persistence ---------- */
 /* Only registers on https/http. file:// has no SW support, and the app still

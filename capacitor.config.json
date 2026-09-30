@@ -1,0 +1,8 @@
+{
+  "appId": "com.kanchi.healthlevel1000",
+  "appName": "Health Level 1000",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -1,3 +1,12 @@
+node_modules/
+www/
+.gradle/
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/.idea/
+*.iml
 _*.js
 _*.txt
 .DS_Store
