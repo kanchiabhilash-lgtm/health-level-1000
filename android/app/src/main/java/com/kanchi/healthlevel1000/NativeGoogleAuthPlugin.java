@@ -35,7 +35,7 @@ public class NativeGoogleAuthPlugin extends Plugin {
         GoogleSignInOptions gso = gsoBuilder.build();
         googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
 
-        // Sign out before launching so user can always choose/switch their account
+        // Clear prior session so account chooser dialog always displays
         googleSignInClient.signOut().addOnCompleteListener(task -> {
             Intent signInIntent = googleSignInClient.getSignInIntent();
             startActivityForResult(call, signInIntent, "handleSignInResult");
@@ -44,32 +44,42 @@ public class NativeGoogleAuthPlugin extends Plugin {
 
     @ActivityCallback
     private void handleSignInResult(PluginCall call, ActivityResult result) {
-        if (result.getResultCode() == Activity.RESULT_CANCELED) {
-            call.reject("Sign-in cancelled by user");
-            return;
+        Intent data = result.getData();
+        if (data != null) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                if (account != null) {
+                    JSObject ret = new JSObject();
+                    ret.put("email", account.getEmail() != null ? account.getEmail() : "");
+                    ret.put("displayName", account.getDisplayName() != null ? account.getDisplayName() : "");
+                    ret.put("idToken", account.getIdToken() != null ? account.getIdToken() : "");
+                    ret.put("id", account.getId() != null ? account.getId() : "");
+                    if (account.getPhotoUrl() != null) {
+                        ret.put("photoUrl", account.getPhotoUrl().toString());
+                    } else {
+                        ret.put("photoUrl", "");
+                    }
+                    call.resolve(ret);
+                    return;
+                }
+            } catch (ApiException e) {
+                int code = e.getStatusCode();
+                String msg = e.getMessage();
+                if (code == 10) {
+                    msg = "SHA-1 fingerprint required in Firebase Console";
+                } else if (code == 12500) {
+                    msg = "Google Sign-In configuration error (" + code + ")";
+                }
+                call.reject("Google Sign-In Error (" + code + "): " + msg);
+                return;
+            }
         }
 
-        Intent data = result.getData();
-        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-        try {
-            GoogleSignInAccount account = task.getResult(ApiException.class);
-            if (account != null) {
-                JSObject ret = new JSObject();
-                ret.put("email", account.getEmail() != null ? account.getEmail() : "");
-                ret.put("displayName", account.getDisplayName() != null ? account.getDisplayName() : "");
-                ret.put("idToken", account.getIdToken() != null ? account.getIdToken() : "");
-                ret.put("id", account.getId() != null ? account.getId() : "");
-                if (account.getPhotoUrl() != null) {
-                    ret.put("photoUrl", account.getPhotoUrl().toString());
-                } else {
-                    ret.put("photoUrl", "");
-                }
-                call.resolve(ret);
-            } else {
-                call.reject("Google sign-in account is null");
-            }
-        } catch (ApiException e) {
-            call.reject("Google Sign-In failed with status code: " + e.getStatusCode() + " (" + e.getMessage() + ")");
+        if (result.getResultCode() == Activity.RESULT_CANCELED) {
+            call.reject("Sign-in cancelled by user");
+        } else {
+            call.reject("Sign-in failed with result code: " + result.getResultCode());
         }
     }
 
