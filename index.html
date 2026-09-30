@@ -1091,12 +1091,22 @@ function importData(){
    ========================================================================== */
 let fbUser = null, fbAuth = null, fbDb = null, syncStatus = 'idle', lastSyncTime = null;
 
+const DEFAULT_FB_CONFIG = {
+  apiKey: "AIzaSyA-oBvOr0Bml-kfnIztTMwdHyT8FnE1wPw",
+  authDomain: "health-level-1000-89c14.firebaseapp.com",
+  projectId: "health-level-1000-89c14",
+  storageBucket: "health-level-1000-89c14.firebasestorage.app",
+  messagingSenderId: "747063742595",
+  appId: "1:747063742595:web:aa8958cd506f3bc5268bb6",
+  measurementId: "G-BSJ7VVSL9P"
+};
+
 function getFbConfig(){
   try {
     const custom = JSON.parse(localStorage.getItem('hl1000.fbConfig'));
     if(custom && custom.apiKey && custom.projectId) return custom;
   } catch(e){}
-  return null;
+  return DEFAULT_FB_CONFIG;
 }
 
 function initFirebase(){
