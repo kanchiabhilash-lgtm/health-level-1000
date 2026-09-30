@@ -739,7 +739,7 @@ function viewDash(){
       Object.keys(u).map(function(k){return TRACKS[k].short+' '+u[k];}).join(' · ')+
     ' — then the other 990 unlock one per completed level.</p>'
   + '<div class="row" style="gap:8px;margin-top:4px"><button class="btn sec sm" data-act="track">Switch goal track</button>'+
-    '<button class="btn sec sm" data-act="export">Backup</button></div>'
+    '<button class="btn sec sm" data-act="export">📥 Backup (.json)</button></div>'
   +'</div>'
 
   +'<div class="card tight"><p class="mut" style="margin:0">🔥 '+esc(CLIMATE[Object.keys(CLIMATE)[0]]).slice(0,0)+'Season note: '+esc(CLIMATENOTE())+'</p></div>';
@@ -945,10 +945,12 @@ function viewMe(){
   +'<tr><td>Streak / best</td><td><b>'+streakTxt()+' / '+(S.bestStreak||0)+'</b></td></tr>'
   +'<tr><td>Levels per goal</td><td><b>'+Object.keys(unlockedByTrack()).map(function(k){return TRACKS[k].short+' '+unlockedByTrack()[k];}).join(' · ')+'</b></td></tr>'
   +'</table></div>'
-  +'<div class="card"><h2>Data</h2><p class="mut">Everything lives in this browser only. No account, no server, no tracking.</p>'
-  +'<div class="row" style="gap:8px"><button class="btn sec sm grow" data-act="export">Export backup</button>'
-  +'<button class="btn sec sm grow" data-act="import">Import</button></div>'
-  +'<button class="btn ghost sm" data-act="reset" style="margin-top:8px">Reset all progress</button></div>'
+  +'<div class="card"><h2>Backup &amp; Sync across devices</h2>'
+  +'<p class="mut"><b>Important:</b> GitHub only hosts the app program, NOT your personal progress. Your workouts and levels are stored safely on this device.</p>'
+  +'<p class="mut">To transfer to a new phone or create a safe copy: tap <b>Download Backup</b>, save the file (to Drive/WhatsApp), and on your other device tap <b>Upload Backup</b>.</p>'
+  +'<div class="row" style="gap:8px;margin-top:10px"><button class="btn sec sm grow" data-act="export">📥 Download Backup (.json)</button>'
+  +'<button class="btn sec sm grow" data-act="import">📤 Upload Backup</button></div>'
+  +'<button class="btn ghost sm" data-act="reset" style="margin-top:12px;color:var(--bad)">Reset all progress</button></div>'
   +'<div class="card"><h2>Install as an app</h2>'
   +'<p class="mut">Once hosted (or opened from this folder in a browser), install it for a full-screen icon with no browser chrome:</p>'
   +'<p class="mut"><b>Android / Chrome</b> — ⋮ menu → <b>Install app</b>, or Add to Home screen.<br>'
@@ -1009,20 +1011,42 @@ function trackPicker(){
   });
 }
 function exportData(){
-  const txt=JSON.stringify(S);
-  const ta=document.createElement('textarea'); ta.value=txt;
-  ta.style.cssText='position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select();
-  let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
-  if(navigator.clipboard&&!ok){ navigator.clipboard.writeText(txt).then(function(){toast('Backup copied');},function(){prompt('Copy this:',txt);}); }
-  else if(ok) toast('Backup copied to clipboard');
-  else prompt('Copy this backup:',txt);
-  ta.remove();
+  const txt=JSON.stringify(S, null, 2);
+  const blob=new Blob([txt], {type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='health-level-1000-backup-'+(new Date().toISOString().slice(0,10))+'.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ a.remove(); URL.revokeObjectURL(url); }, 500);
+  toast('Backup file downloaded');
 }
 function importData(){
-  const v=prompt('Paste your backup text:');
-  if(!v) return;
-  try{ const o=JSON.parse(v); S=Object.assign(blank,o); save(); setTrackVar(); VIEW='dash'; render(); toast('Restored'); }
-  catch(e){ toast('That backup could not be read'); }
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='.json,application/json';
+  input.onchange=function(e){
+    const file=e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(evt){
+      try{
+        const o=JSON.parse(evt.target.result);
+        if(!o || typeof o!=='object') throw new Error('Invalid format');
+        S=Object.assign({}, blank, o);
+        save();
+        setTrackVar();
+        VIEW='dash';
+        render();
+        toast('Backup restored successfully!');
+      }catch(err){
+        toast('Invalid backup file');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 /* onboarding */
@@ -1045,12 +1069,17 @@ setTrackVar();
 render();
 if(!S.onboarded) setTimeout(onboard,300);
 
-/* ---------- PWA: offline shell + install shortcuts ---------- */
+/* ---------- PWA: offline shell + install shortcuts + persistence ---------- */
 /* Only registers on https/http. file:// has no SW support, and the app still
    works there (everything is in this one file). */
 if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
   window.addEventListener('load',function(){
     navigator.serviceWorker.register('sw.js').catch(function(){});
+    if(navigator.storage && navigator.storage.persist){
+      navigator.storage.persist().then(function(persistent){
+        if(!persistent) console.log('Storage not marked as persistent');
+      });
+    }
   });
 }
 window.addEventListener('hashchange',function(){
