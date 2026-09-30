@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="Gamified bodyweight fitness: 1,000 progressive levels, 4 goal tracks, integrated work/rest timers, and a Gulbarga vegetarian fuel plan.">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HL1000">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Health Level 1000 — Gamified Fitness Ecosystem</title>
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#0f1526; --card:#141b2e; --card2:#1a2238;
+  --line:#243049; --txt:#e8ecf7; --dim:#8f9bbd; --dim2:#5f6b8a;
+  --ok:#2fd6a0; --warn:#ffc857; --bad:#ff5f6d; --acc:#3d8bff;
+  --trk:#a06bff; --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+  -webkit-text-size-adjust:100%}
+body{overscroll-behavior-y:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--txt);background:var(--card2);
+  border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+a{color:var(--acc)}
+.hide{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px calc(96px + var(--safe-b))}
+
+/* ---------- top bar ---------- */
+header{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,#0a0e1a 60%,#0a0e1ae6);
+  border-bottom:1px solid var(--line);padding-top:var(--safe-t)}
+.hrow{max-width:560px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.logo{font-weight:800;letter-spacing:.5px;font-size:15px;flex:1}
+.logo span{color:var(--trk)}
+.xp{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.xp b{color:var(--txt)}
+
+/* ---------- rank rail ---------- */
+.rail{height:6px;background:var(--card2);position:relative;overflow:hidden}
+.rail i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--trk),#fff);transition:width .5s}
+
+/* ---------- nav ---------- */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#0d1220ee;
+  backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  padding:8px 6px calc(8px + var(--safe-b));display:flex}
+nav button{flex:1;padding:6px 2px;border-radius:12px;color:var(--dim2);
+  font-size:10px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.18s}
+nav button b{font-size:17px;font-weight:400;line-height:1}
+nav button.on{color:var(--trk);background:#ffffff0d}
+
+/* ---------- cards ---------- */
+.card{background:linear-gradient(160deg,var(--card),#111729);border:1px solid var(--line);
+  border-radius:20px;padding:16px;margin:12px 0}
+.card.tight{padding:13px}
+h1{font-size:22px;margin:18px 2px 2px;letter-spacing:-.4px}
+h2{font-size:16px;margin:0 0 10px;letter-spacing:-.2px}
+h3{font-size:14px;margin:0 0 8px}
+p{margin:6px 0;color:var(--dim);font-size:13.5px;line-height:1.55}
+.mut{color:var(--dim2);font-size:12px}
+.big{font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1}
+.row{display:flex;gap:10px;align-items:center}
+.row.w{justify-content:space-between}
+.grow{flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ---------- level orb ---------- */
+.orb{position:relative;width:168px;height:168px;margin:6px auto 10px}
+.orb svg{transform:rotate(-90deg)}
+.orb .mid{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center}
+.orb .lvl{font-size:11px;letter-spacing:2px;color:var(--dim)}
+.orb .num{font-size:46px;font-weight:800;letter-spacing:-2px;line-height:1;
+  background:linear-gradient(180deg,#fff,var(--trk));-webkit-background-clip:text;
+  background-clip:text;-webkit-text-fill-color:transparent}
+.orb .of{font-size:11px;color:var(--dim2);margin-top:3px}
+
+/* ---------- buttons ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:14px;border-radius:16px;font-weight:700;font-size:15px;
+  background:linear-gradient(135deg,var(--trk),#6a4bd8);color:#fff;
+  box-shadow:0 8px 24px -10px var(--trk);transition:.15s}
+.btn:active{transform:scale(.975)}
+.btn.sec{background:var(--card2);border:1px solid var(--line);box-shadow:none;color:var(--txt);font-weight:600}
+.btn.ghost{background:transparent;border:1px solid var(--line);box-shadow:none;color:var(--dim)}
+.btn.sm{padding:10px;font-size:13px;border-radius:12px}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn.good{background:linear-gradient(135deg,#22b98a,#128a63);box-shadow:0 8px 24px -10px #22b98a}
+
+/* ---------- chips ---------- */
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 13px;border-radius:999px;background:var(--card2);
+  border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--dim)}
+.chip.on{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--trk),#6a4bd8)}
+
+/* ---------- pills ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
+  font-size:11px;font-weight:700;letter-spacing:.3px;background:#ffffff10;
+  border:1px solid var(--line);color:var(--dim)}
+.pill.t{background:color-mix(in srgb,var(--trk) 18%,transparent);border-color:transparent;color:#fff}
+.pill.ok{background:#2fd6a022;color:var(--ok);border-color:transparent}
+.pill.w{background:#ffc85722;color:var(--warn);border-color:transparent}
+
+/* ---------- exercise row ---------- */
+.ex{border:1px solid var(--line);border-radius:16px;background:var(--card2);padding:12px;margin:10px 0}
+.ex.done{border-color:#2fd6a055;background:#2fd6a00f}
+.ex.cur{border-color:var(--trk);box-shadow:0 0 0 1px var(--trk) inset}
+.ex .nm{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.ex .cue{font-size:12.5px;color:var(--dim);margin-top:4px;line-height:1.5}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.reps{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.reps b{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  background:var(--card);border:1px solid var(--line);font-size:12px;font-weight:700}
+.reps b.on{background:var(--trk);border-color:transparent;color:#fff}
+.reps b.hit{background:#2fd6a026;border-color:#2fd6a055;color:var(--ok)}
+
+/* ---------- timer ---------- */
+.timer{text-align:center;padding:8px 0 4px}
+.timer .t{font-size:78px;font-weight:800;letter-spacing:-4px;line-height:1;
+  font-variant-numeric:tabular-nums}
+.timer .lab{font-size:12px;letter-spacing:3px;color:var(--dim);margin-top:6px}
+.timer.work .t{color:var(--ok);text-shadow:0 0 40px #2fd6a055}
+.timer.rest .t{color:var(--warn);text-shadow:0 0 40px #ffc85744}
+.ring{width:236px;height:236px;margin:0 auto;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring .mid{position:absolute;inset:0;display:grid;place-items:center}
+
+/* ---------- level cards ---------- */
+.lv{display:flex;align-items:center;gap:11px;padding:11px;border-radius:14px;
+  border:1px solid var(--line);background:var(--card2);margin:8px 0}
+.lv.lock{opacity:.42}
+.lv.cur{border-color:var(--trk);background:color-mix(in srgb,var(--trk) 12%,var(--card2))}
+.lv .n{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;
+  font-weight:800;font-size:13px;background:var(--card);border:1px solid var(--line)}
+.lv.cur .n{background:var(--trk);border-color:transparent;color:#fff}
+.lv .t1{font-weight:700;font-size:13.5px}
+.lv .t2{font-size:11.5px;color:var(--dim);margin-top:2px}
+.lv .st{margin-left:auto;text-align:right;flex:none}
+
+/* ---------- bar ---------- */
+.bar{height:7px;border-radius:99px;background:var(--card);overflow:hidden;margin:7px 0 2px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--trk),#fff);
+  border-radius:99px;transition:width .4s}
+
+/* ---------- log ---------- */
+.logd{border-bottom:1px solid var(--line);padding:9px 0;display:flex;gap:10px;font-size:12.5px}
+.logd b{font-variant-numeric:tabular-nums;min-width:34px}
+
+/* ---------- diet ---------- */
+.meal{border:1px solid var(--line);border-radius:16px;background:var(--card2);padding:13px;margin:10px 0}
+.meal .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.meal .mt{font-size:11px;font-weight:700;letter-spacing:1.4px;color:var(--trk)}
+.meal ul{margin:6px 0 0;padding-left:17px}
+.meal li{font-size:13px;color:var(--txt);line-height:1.6;margin:2px 0}
+.note{border-left:3px solid var(--warn);padding:8px 0 8px 11px;margin:10px 0;
+  background:#ffc8570d;border-radius:0 10px 10px 0;font-size:12.5px;color:var(--dim);line-height:1.55}
+.ok-note{border-left-color:var(--ok);background:#2fd6a00d}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim2);font-size:10.5px;letter-spacing:.7px;font-weight:700}
+td b{color:var(--txt)}
+
+/* ---------- confetti ---------- */
+#conf{position:fixed;inset:0;pointer-events:none;z-index:99}
+#conf i{position:absolute;width:8px;height:14px;border-radius:2px;animation:fl 1.5s ease-in forwards}
+@keyframes fl{to{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:80;background:#04060cd9;display:grid;place-items:center;padding:18px}
+.modal .in{max-width:460px;width:100%;background:var(--card);border:1px solid var(--line);
+  border-radius:22px;padding:20px;max-height:88vh;overflow:auto}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(max-width:360px){.orb{width:140px;height:140px}.orb .num{font-size:38px}.timer .t{font-size:64px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="logo">HEALTH <span>LEVEL 1000</span></div>
+    <div class="xp" id="xpLbl">LV <b>1</b> · <b>0</b> XP</div>
+  </div>
+  <div class="rail"><i id="rail" style="width:0%"></i></div>
+</header>
+
+<div class="wrap" id="view"></div>
+
+<nav>
+  <button data-v="dash" class="on"><b>◉</b>Dash</button>
+  <button data-v="work"><b>▶</b>Train</button>
+  <button data-v="levels"><b>▤</b>Levels</button>
+  <button data-v="diet"><b>◍</b>Fuel</button>
+  <button data-v="me"><b>☰</b>You</button>
+</nav>
+
+<div id="conf"></div>
+
+<script>
+"use strict";
+/* ==========================================================================
+   HEALTH LEVEL 1000 — single-file gamified fitness engine
+   Bodyweight-only. 1000-level progression. 4 goals. No network required.
+   Data below is a GENERATOR + curation, so all 1000 levels are real, not stubs.
+   ========================================================================== */
+
+/* ---------- tiny helpers ---------- */
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.prototype.slice.call((r||document).querySelectorAll(s));
+const clamp=(v,a,b)=> v<a?a:v>b?b:v;
+const nf = n => n.toLocaleString('en-IN');
+const pad2 = n => (n<10?'0':'')+n;
+const mmss = s => pad2(Math.floor(s/60))+':'+pad2(s%60);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- persistence ---------- */
+const KEY='hl1000.v1';
+const blank={ level:1, xp:0, totalReps:0, totalWorkoutSec:0, workoutsDone:0, streak:0,
+  lastDone:null, bestStreak:0, track:'', history:{}, repsToday:0, repsDay:'', bw:'', height:'',
+  onboarded:false };
+let S = load();
+function load(){
+  try{ const r=JSON.parse(localStorage.getItem(KEY)); return Object.assign({},blank,r||{}); }
+  catch(e){ return Object.assign({},blank); }
+}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+/* ==========================================================================
+   1. GOAL TRACKS
+   ========================================================================== */
+const TRACKS={
+  fat:    {key:'fat',    name:'Fat Loss',        short:'FAT',  icon:'🔥', color:'#ff6b3d',
+           goal:'Reduce body fat, protect muscle',          hue:14,
+           dial:'Calorie deficit · high rep volume · short rests · HIIT density',
+           fuel:'Deficit, high fibre, high volume, low oil. Protein kept high so muscle survives the cut.'},
+  muscle: {key:'muscle', name:'Muscle Gain',     short:'MUSC', icon:'💪', color:'#3d8bff',
+           goal:'Add lean mass with progressive overload',  hue:210,
+           dial:'Small surplus · long tension · compound patterns · 60–90s rest',
+           fuel:'Modest surplus, extra rice/ragi/jowar, protein at every meal, oil measured not poured.'},
+  recomp: {key:'recomp', name:'Recomposition',   short:'RCMP', icon:'⚖️', color:'#2fd6a0',
+           goal:'Lose fat and gain muscle at once',          hue:158,
+           dial:'Tight volume · high protein · 30–45s rest · technique over load',
+           fuel:'Balanced plate. Every meal carries protein. Veg first, carbs second, ghee/oil smallest.'},
+  fit:    {key:'fit',    name:'Fitness',         short:'FIT',  icon:'🫀', color:'#a06bff',
+           goal:'Engine, strength endurance, real-world carrying', hue:268,
+           dial:'Intervals · aerobic base · core and carry work · low skill ceiling',
+           fuel:'Carb-timed around training. More rice on training days, less on rest days.'}
+};
+const TRACK_ORDER=['fat','muscle','recomp','fit'];
+const PHASES=['Foundation','Build','Intensity','Volume','Integrate'];
+const PHASE_ROLE=[
+  'Learn the movement. Form over everything.',
+  'Add reps. Progression you can feel.',
+  'Short rest, higher heart rate, real effort.',
+  'More sets. Metabolic cost goes up.',
+  'Full circuit. Fatigue is the point.'
+];
+
+/* ==========================================================================
+   2. EXERCISE LIBRARY  (bodyweight only, but architected for equipment later)
+   --------------------------------------------------------------------------
+   Every entry carries: pattern + gear + a `cue`. The prescription engine reads
+   `pattern` only. To add equipment later you add one entry with
+   gear:'dumbbell' and the SAME pattern — timing/rep math is unchanged.
+   ========================================================================== */
+const EX={
+  march:        {name:'March In Place',      pat:'tmpl',  gear:'none', side:false, cue:'Stand tall, soft knees, lift each knee to hip height. No jumping, no breath holding.', v:'march in place exercise'},
+  wallPushup:   {name:'Wall Push-ups',       pat:'calis', gear:'none', side:false, cue:'Hands on wall at chest height, body in one line. Elbows 45°. Stop 2 reps shy of failure.', v:'wall push up proper form'},
+  pushup:       {name:'Push-ups',            pat:'calis', gear:'none', side:false, cue:'Rigid plank line, chest to floor. Elbows 45°, not flared. Full lockout at the top.', v:'push up proper form'},
+  pikepushup:   {name:'Pike Push-ups',       pat:'calis', gear:'none', side:false, cue:'Hips high, head toward the floor between the hands. Lower yourself slowly, count 2 seconds down.', v:'pike push up'},
+  squat:        {name:'Bodyweight Squats',   pat:'tmpl',  gear:'none', side:false, cue:'Feet shoulder width. Sit back and down, knees tracking over toes, chest proud. Slow 3s down.', v:'bodyweight squat proper form'},
+  lissajous:    {name:'Squats (Slow Tempo)', pat:'tmpl',  gear:'none', side:false, cue:'3 seconds down, 1 second pause, 1 second up. Slow the descent, not the effort.', v:'tempo squat'},
+  lunge:        {name:'Reverse Lunges',      pat:'core',  gear:'none', side:true,  cue:'Step back, drop the back knee, drive through the front heel. Count per leg.', v:'reverse lunge proper form'},
+  skater:       {name:'Skater Jumps',        pat:'core',  gear:'none', side:false, cue:'Bound side to side, stick the landing 1 second before the next jump. Quiet feet.', v:'skater jumps exercise'},
+  situp:        {name:'Sit-ups',             pat:'core',  gear:'none', side:false, cue:'Curl the spine segment by segment. Do not yank the neck up.', v:'sit up proper form'},
+  flutter:      {name:'Flutter Kicks',       pat:'core',  gear:'none', side:false, cue:'Lie flat, legs 20cm off the floor, fast small kicks. Lower back stays pressed down.', v:'flutter kick exercise'},
+  deadbug:      {name:'Dead Bug',            pat:'core',  gear:'none', side:false, cue:'Lower back glued to the floor. Opposite arm and leg reach, breathe out on the reach.', v:'dead bug exercise'},
+  bicepcurl:    {name:'Standing Bicep Curls',pat:'core',  gear:'none', side:false, cue:'Elbows pinned to the ribs, curl to the shoulder, lower fully. No swinging.', v:'bicep curl no weights'},
+  calfraise:    {name:'Calf Raises',         pat:'core',  gear:'none', side:false, cue:'Up on your toes, pause at the top, down slow. Do not bounce.', v:'calf raise exercise'},
+  tricepdip:    {name:'Bench Dips',          pat:'core',  gear:'bench', side:false, cue:'Hands behind you on a chair, hips close to the floor, elbows straight back.', v:'bench tricep dip'},
+  glutebridge:  {name:'Glute Bridges',       pat:'tmpl',  gear:'none', side:false, cue:'Heels down, drive hips to the ceiling, squeeze 1 second at the top. Do not arch.', v:'glute bridge proper form'},
+  highknees:    {name:'High Knees',          pat:'tmpl',  gear:'none', side:false, cue:'Knee to hip height, tall posture, quick ground contact. Count in seconds.', v:'high knees exercise'},
+  jumpingjack:  {name:'Jumping Jacks',       pat:'tmpl',  gear:'none', side:false, cue:'Light on the feet, full arm overhead. Soft knees on landing.', v:'jumping jack proper form'},
+  burpee:       {name:'Burpees',             pat:'power', gear:'none', side:false, cue:'Chest to floor, jump or step up, jump for height, land soft. Walk it if you must.', v:'burpee proper form'},
+  mountaincl:   {name:'Mountain Climbers',   pat:'tmpl',  gear:'none', side:false, cue:'Hips steady and high, drive the knees fast. Do not bounce the shoulders.', v:'mountain climber exercise'},
+  pike:         {name:'Pike Walk-Out',        pat:'power', gear:'none', side:false, cue:'Hips high, walk the hands out, walk back. Walk, do not jump, if the wrists complain.', v:'walk out exercise'},
+  plank:        {name:'Plank',               pat:'static',gear:'none', side:false, cue:'Forearms and toes, body one line, glutes squeezed, breathe steadily.', v:'plank proper form'},
+  sideplank:    {name:'Side Plank',          pat:'static',gear:'none', side:true,  cue:'Stack the feet, lift the hips, look forward. Count per side.', v:'side plank'},
+  birddog:      {name:'Bird Dog',            pat:'static',gear:'none', side:true,  cue:'All fours, extend opposite arm and leg until the body is one line. Count per side.', v:'bird dog exercise'},
+  bearplank:    {name:'Bear Plank',          pat:'static',gear:'none', side:false, cue:'Knees 2cm off the floor, back flat, hold. The whole core screams quietly.', v:'bear plank hold'},
+  bearcrawl:    {name:'Bear Crawl',          pat:'calis', gear:'none', side:true,  cue:'Opposite hand and foot, hips low, move forward and back. Count per length.', v:'bear crawl'},
+  wallsit:      {name:'Wall Sit',            pat:'iso',  gear:'wall', side:false, cue:'Back flat to the wall, knees at 90°, hold without holding your breath.', v:'wall sit hold'},
+  superman:     {name:'Superman Hold',       pat:'iso',  gear:'none', side:true,  cue:'Lift arms and legs, squeeze the glutes, no neck extension. Count per side.', v:'superman exercise'},
+  handstand:    {name:'Wall Handstand Hold', pat:'iso',  gear:'wall', side:false, cue:'Kick up to the wall, hands 15cm apart, push the floor away. Bend-knee kick-ups are fine.', v:'wall handstand hold'},
+  burpeePike:   {name:'Pike Push-up',         pat:'power', gear:'none', side:false, cue:'Explosive lockout. Land soft, do not collapse the lower back.', v:'explosive pike push up'}
+};
+
+/* pattern -> prescription ranges. `repStep/workStep/restStep` scale per ROUND.
+   mode: 'reps' counts repetitions | 'hold' counts seconds per side          */
+const RANGE={
+  calis:{mode:'reps', base:8,  step:1,  max:30, workBase:36, workStep:2, restBase:60, restStep:4, label:'reps'},
+  tmpl: {mode:'reps', base:12, step:2,  max:40, workBase:32, workStep:2, restBase:45, restStep:3, label:'reps'},
+  core: {mode:'reps', base:10, step:2,  max:40, workBase:30, workStep:2, restBase:40, restStep:3, label:'reps'},
+  power:{mode:'reps', base:6,  step:1,  max:20, workBase:24, workStep:2, restBase:75, restStep:5, label:'reps'},
+  iso:  {mode:'hold', base:20, step:3,  max:120,restBase:40,  restStep:3, label:'sec'},
+  static:{mode:'hold',base:30, step:5,  max:150,restBase:45,  restStep:3, label:'sec'}
+};
+const RANGE_TRACK_MULT={fat:0.8, muscle:1.15, recomp:0.75, fit:0.9};
+
+/* slot tables: [exerciseId, rangeKey] per track+phase. Neighbouring levels
+   always draw from a different phase table, so no two levels repeat.        */
+const SLOTS={
+  fat:{0:[['squat','tmpl'],['glutebridge','tmpl'],['plank','static'],['birddog','static'],['bicepcurl','core']],
+       1:[['lunge','core'],['highknees','tmpl'],['superman','iso'],['situp','core'],['sideplank','static']],
+       2:[['burpee','power'],['mountaincl','tmpl'],['jumpingjack','tmpl'],['flutter','core'],['pike','power']],
+       3:[['skater','core'],['bearcrawl','calis'],['deadbug','core'],['lissajous','tmpl'],['glutebridge','tmpl']],
+       4:[['skater','core'],['flutter','core'],['jumpingjack','tmpl'],['lunge','core'],['bearplank','static']]},
+  muscle:{0:[['wallPushup','calis'],['squat','tmpl'],['tricepdip','core'],['glutebridge','tmpl'],['plank','static']],
+       1:[['pushup','calis'],['lunge','core'],['bicepcurl','core'],['sideplank','static'],['calfraise','core']],
+       2:[['pikepushup','calis'],['squat','tmpl'],['tricepdip','core'],['bearplank','static'],['superman','iso']],
+       3:[['pushup','calis'],['bicepcurl','core'],['lunge','core'],['lissajous','tmpl'],['wallsit','iso']],
+       4:[['pike','power'],['squat','tmpl'],['bearplank','static'],['handstand','iso'],['pikepushup','calis']]},
+  recomp:{0:[['squat','tmpl'],['glutebridge','tmpl'],['wallPushup','calis'],['deadbug','core'],['plank','static']],
+       1:[['pushup','calis'],['lunge','core'],['situp','core'],['superman','iso'],['sideplank','static']],
+       2:[['burpee','power'],['pushup','calis'],['mountaincl','tmpl'],['flutter','core'],['bearplank','static']],
+       3:[['skater','core'],['calfraise','core'],['lissajous','tmpl'],['deadbug','core'],['wallsit','iso']],
+       4:[['jumpingjack','tmpl'],['pushup','calis'],['lunge','core'],['flutter','core'],['handstand','iso']]},
+  fit:{0:[['glutebridge','tmpl'],['march','tmpl'],['plank','static'],['birddog','static'],['calfraise','core']],
+       1:[['burpee','power'],['mountaincl','tmpl'],['deadbug','core'],['superman','iso'],['sideplank','static']],
+       2:[['jumpingjack','tmpl'],['skater','core'],['flutter','core'],['bearplank','static'],['glutebridge','tmpl']],
+       3:[['lunge','core'],['bearcrawl','calis'],['situp','core'],['wallsit','iso'],['highknees','tmpl']],
+       4:[['flutter','core'],['mountaincl','tmpl'],['skater','core'],['sideplank','static'],['march','tmpl']]}
+};
+
+/* levels 1–4 hand-authored: the absolute simplest possible tasks.
+   [exerciseId, rangeKey, sets, reps, holdSeconds]                          */
+const AUTHORED={
+1:{track:'fat', ex:[['march','tmpl',2,20,0],['glutebridge','tmpl',2,8,0]],
+   name:'Stand Up And Breathe', note:'Two minutes of moving. That is the entire level. Do it, then carry on with your day.'},
+ 2:{track:'muscle',ex:[['wallPushup','calis',2,5,0],['birddog','static',2,0,15]],
+   name:'Five Wall Presses', note:'Push the wall away like you are angry at it. Stop at 5 even if 10 is possible.'},
+ 3:{track:'recomp',ex:[['squat','tmpl',2,8,0],['deadbug','core',2,8,0]],
+   name:'Slow Sit', note:'Down in three seconds, up fast. This is the tempo that builds muscle, not the count.'},
+ 4:{track:'fit', ex:[['plank','static',2,0,25],['highknees','tmpl',2,20,0]],
+   name:'Hold The Line', note:'If you can talk in full sentences, hold 10 seconds longer.'}
+};
+
+/* ==========================================================================
+   3. THE 1000-LEVEL ENGINE
+   ========================================================================== */
+const RANK_LADDER=[
+ {min:1,t:'Initiate'},{min:5,t:'Mover'},{min:10,t:'Trained'},{min:20,t:'Ascender'},
+ {min:35,t:'Grinder'},{min:50,t:'Gunner'},{min:70,t:'Behemoth'},{min:90,t:'Colossus'},
+ {min:120,t:'Juggernaut'},{min:200,t:'Monolith'},{min:300,t:'Titan'},{min:400,t:'Valkyrie'},
+ {min:500,t:'Sentinel'},{min:600,t:'Paragon'},{min:700,t:'Oracle'},{min:800,t:'Celestial'},
+ {min:900,t:'Mythic'},{min:1000,t:'Ascended'}];
+const XP=[10,14,18,24,32,42,55,72,95,125,165,215,280,360,465,600,775,1000,1295,1680];
+
+const LEVELS=[];
+(function build(){
+  let floorSec=0, lastSig='';
+  for(let n=1;n<=1000;n++){
+    const tier=Math.floor((n-1)/4), phase=tier%5, round=Math.floor(tier/5)+1;
+    const tr=TRACK_ORDER[(n-1)%4], prog=n/1000;
+    const lv={n, track:tr, phase, round, phaseName:PHASES[phase], role:PHASE_ROLE[phase]};
+    if(AUTHORED[n]){
+      lv.ex=AUTHORED[n].ex.map(function(a){
+        const R=RANGE[a[1]], isHold=R.mode==='hold';
+        return {id:a[0],range:a[1],sets:a[2],reps:isHold?0:a[3],hold:isHold?a[4]:0,
+          mode:R.mode, work:isHold?a[4]:clamp(a[3]*3+6,10,90), rest:45};
+      });
+    } else {
+      /* rotate the slot window by goal so two levels sharing a phase never
+         draw the same starting pair (L6/L7 and L8/L9 collided without this) */
+      const tbl=SLOTS[tr][phase], off=((round-1)+TRACK_ORDER.indexOf(tr))%tbl.length;
+      const g=Math.pow(prog,0.35);
+      const count=clamp(2+Math.floor(g*4),2,5);
+      const sets=clamp(2+Math.floor(g*4.5),2,5);
+      const mult=RANGE_TRACK_MULT[tr], chosen=[];
+      for(let i=0;i<count;i++) chosen.push(tbl[(off+i)%tbl.length]);
+      /* two different goals can share an identical phase table, which made a
+         few pairs (L143/144) land on the same movement list. Nudge the window. */
+      const sig=chosen.map(function(c){return c[0];}).sort().join(',');
+      if(sig===lastSig) for(let i=0;i<count;i++) chosen[i]=tbl[(off+1+i)%tbl.length];
+      lastSig=chosen.map(function(c){return c[0];}).sort().join(',');
+      lv.ex=chosen.map(function(pair){
+        const R=RANGE[pair[1]], isHold=R.mode==='hold';
+        const amount=clamp(Math.round(R.base*(0.7+0.8*prog)), isHold?8:4, isHold?60:R.max);
+        const reps=isHold?0:amount, hold=isHold?amount:0;
+        return {id:pair[0],range:pair[1],sets,reps,hold,mode:R.mode,
+          work:isHold?amount:clamp(Math.round(reps*3+6),10,45),
+          rest:clamp(Math.round((R.restBase+R.restStep*prog*10)*mult/5)*5,30,90)};
+      });
+    }
+    /* single authority for session length: non-decreasing, hard 45-min ceiling */
+    const CAP=2700;
+    const raw=lv.ex.reduce((t,e)=>t+(e.work+e.rest)*e.sets,0);
+    const target=Math.min(CAP, Math.max(floorSec, Math.round(raw/5)*5));
+    if(target>raw){ const f=target/raw;
+      lv.ex.forEach(function(e){ e.work=Math.max(8,Math.round(e.work*f));
+        e.rest=Math.max(20,Math.round(e.rest*f/5)*5); }); }
+    floorSec=target;
+    lv.title=TRACKS[tr].name+' · '+lv.phaseName+' '+round;
+    lv.name =AUTHORED[n]?AUTHORED[n].name:lv.ex.length+' moves · '+lv.phaseName+' '+round;
+    lv.note=AUTHORED[n]?AUTHORED[n].note:lv.role+' Track: '+TRACKS[tr].dial+'.';
+    lv.sets=lv.ex[0].sets;
+    lv.totalSec=target;
+    lv.reps=lv.ex.reduce((t,e)=>t+(e.mode==='reps'?e.reps*e.sets:0),0);
+    lv.xp=Math.round(10+(n-1)*0.9+prog*prog*1200);
+    LEVELS.push(lv);
+  }
+})();
+
+function rankOf(n){
+  let r=RANK_LADDER[0];
+  for(let i=0;i<RANK_LADDER.length;i++) if(n>=RANK_LADDER[i].min) r=RANK_LADDER[i];
+  const i=RANK_LADDER.indexOf(r), next=RANK_LADDER[i+1];
+  const span=next?next.min-r.min:1, prog=next?clamp((n-r.min)/span,0,1):1;
+  return {name:r.t, index:i, next:next?next.t:null, nextAt:next?next.min:1000, prog:prog, tier:i+1};
+}
+function totalXPUpTo(n){ let t=0; for(let i=1;i<n;i++) t+=LEVELS[i-1].xp; return t; }
+function levelOf(xp){ let lv=1; while(lv<1000 && xp>=LEVELS[lv-1].xp){ xp-=LEVELS[lv-1].xp; lv++; } return lv; }
+function openLevels(){ return S.level; }              /* levels 1..S.level are unlocked */
+function isUnlocked(n){ return n<=S.level; }
+function activeTrack(){ return TRACKS[S.track] ? S.track : 'recomp'; }
+function currentLevel(){ return LEVELS[clamp(S.level,1,1000)-1]; }
+function nextLevel(){ return LEVELS[S.level] || null; }
+function unlockedByTrack(){ const c={fat:0,muscle:0,recomp:0,fit:0}; for(let n=1;n<=S.level;n++){ c[TRACK_ORDER[(n-1)%4]]++; } return c; }
+
+/* ==========================================================================
+   4. STATE
+   ========================================================================== */
+function refreshDay(){
+  const t=new Date().toISOString().slice(0,10);
+  if(S.repsDay!==t){ S.repsDay=t; S.repsToday=0; save(); }
+}
+function doneToday(){ return S.lastDone===new Date().toISOString().slice(0,10); }
+function streakTxt(){ return S.streak?S.streak+' day'+(S.streak>1?'s':''):'—'; }
+
+/* ==========================================================================
+   5. WORKOUT SESSION  (reps + integrated work timer + integrated rest timer)
+   ========================================================================== */
+const W={ level:null, exIdx:0, setIdx:1, repsDone:0, tapped:{}, timer:null, phase:'idle',
+          endAt:0, total:0, left:0, restLen:0, started:false, sessionSec:0, paused:false };
+let AC=null;
+function beep(kind){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    const t=AC.currentTime;
+    if(kind==='end'){ o.type='sine'; o.frequency.setValueAtTime(880,t); o.frequency.exponentialRampToValueAtTime(1320,t+.12); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.35,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+.55); o.start(t); o.stop(t+.6); }
+    else if(kind==='go'){ o.type='square'; o.frequency.setValueAtTime(520,t); o.frequency.exponentialRampToValueAtTime(880,t+.1); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.25,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+.25); o.start(t); o.stop(t+.28); }
+    else { o.type='sine'; o.frequency.setValueAtTime(660,t); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+.12); o.start(t); o.stop(t+.14); }
+  }catch(e){}
+}
+function buzz(p){ if(navigator.vibrate){ try{navigator.vibrate(p);}catch(e){} } }
+
+function startLevel(n){
+  if(!isUnlocked(n)) return;
+  W.level=LEVELS[n-1]; W.exIdx=0; W.setIdx=1; W.repsDone=0; W.tapped={};
+  W.sessionSec=0; W.total=0; W.started=false; W.paused=false; W.phase='idle';
+  VIEW='work'; render();
+}
+function exNow(){ return W.level? W.level.ex[W.exIdx] : null; }
+
+function phaseWord(){ return W.phase==='work'?'WORK':W.phase==='rest'?'REST':W.phase==='between'?'NEXT UP':W.phase==='done'?'DONE':'READY'; }
+function durNow(){
+  if(W.phase==='work'){ const e=exNow(); return e.work; }
+  if(W.phase==='rest'){ return W.restLen||0; }
+  return 0;
+}
+function runTimer(sec,phase){
+  W.phase=phase; W.total=sec; W.endAt=Date.now()+sec*1000; W.paused=false;
+  if(W.timer) clearInterval(W.timer);
+  W.timer=setInterval(tick,250);
+  tick();
+}
+function pauseTimer(){
+  if(W.phase==='work'||W.phase==='rest'){
+    if(W.paused){ W.endAt=Date.now()+W.left*1000; W.paused=false; W.timer=setInterval(tick,250); }
+    else { W.left=Math.max(0,Math.round((W.endAt-Date.now())/1000)); W.paused=true; clearInterval(W.timer); }
+    paintTimer();
+  }
+}
+function stopTimer(){ if(W.timer) clearInterval(W.timer); W.timer=null; }
+
+function beginWork(){
+  const e=exNow(); beep('go'); buzz(60);
+  if(e.mode==='reps' && !W.started){ W.started=true; }
+  runTimer(e.work,'work');
+}
+function beginRest(){
+  const e=exNow();
+  W.restLen=e.rest;
+  beep('rest'); buzz([40,60,40]);
+  runTimer(e.rest,'rest');
+}
+function tick(){
+  if(W.phase!=='work'&&W.phase!=='rest') return;
+  if(W.paused) return;
+  const left=Math.max(0,Math.round((W.endAt-Date.now())/1000));
+  if(left!==W.left){
+    if(left<=3&&left>0){ beep('tick'); buzz(20); }
+    W.left=left; W.sessionSec++; paintTimer();
+  }
+  if(left<=0){ if(W.phase==='work') endWork(); else { stopTimer(); beginWork(); } }
+}
+function endWork(){
+  stopTimer();
+  const e=exNow();
+  if(W.setIdx>=e.sets){ W.setIdx=1; W.exIdx++; if(W.exIdx>=W.level.ex.length){ W.phase='done'; W.started=true; buzz([80,60,80,60,120]); beep('end'); render(); return; } }
+  else { W.setIdx++; }
+  beginRest();
+}
+function next(){
+  if(W.phase==='rest'){ stopTimer(); beginWork(); render(); return; }
+}
+function skipPhase(){
+  if(W.phase==='work'){ endWork(); render(); return; }
+  if(W.phase==='rest'){ stopTimer(); beginWork(); render(); return; }
+}
+function manualRep(n){
+  if(!W.started||W.phase!=='work') return;
+  const e=exNow(); if(!e||e.mode!=='reps') return;
+  W.tapped[W.exIdx]=(W.tapped[W.exIdx]||0)+n;
+  W.repsDone=Math.min(e.reps, W.tapped[W.exIdx]);
+  S.repsToday+=n; S.totalReps+=n; refreshDay(); save(); paintReps();
+}
+/* Single authority for banking. Whatever the user tapped is already in
+   S.totalReps; credit only the shortfall so nothing is counted twice. */
+function bankReps(lv){
+  lv.ex.forEach(function(e,i){
+    if(e.mode==='reps'){
+      const short=e.reps*e.sets-(W.tapped[i]||0);
+      if(short>0){ S.totalReps+=short; S.repsToday+=short; }
+    } else {
+      S.totalWorkoutSec+=e.hold*e.sets;
+    }
+  });
+  refreshDay(); save();
+}
+function finishLevel(){
+  const lv=W.level;
+  const key=String(lv.n);
+  const first=!S.history[key];
+  if(first){
+    bankReps(lv);
+    S.history[key]=new Date().toISOString().slice(0,10);
+    S.xp+=lv.xp;
+    S.workoutsDone++;
+    const t=new Date().toISOString().slice(0,10);
+    if(S.lastDone!==t){ S.lastDone=t; S.streak=(S.lastDone===yesterday())?S.streak+1:1; }
+    S.bestStreak=Math.max(S.bestStreak,S.streak);
+    const lvNew=levelOf(S.xp);
+    if(lvNew>S.level){ S.level=lvNew; }
+  }
+  save(); confetti(); stopTimer();
+  W.level=null; W.phase='idle';
+  VIEW='dash'; render();
+  if(first && S.level>lv.n) setTimeout(()=>toast('LEVEL UP — '+S.level),600);
+  else setTimeout(()=>toast('Level '+lv.n+' logged'),600);
+}
+function yesterday(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); }
+function confetti(){
+  const box=$('#conf'), cols=['#ff6b3d','#3d8bff','#2fd6a0','#a06bff','#ffc857','#fff'];
+  for(let i=0;i<34;i++){
+    const el=document.createElement('i');
+    el.style.left=Math.random()*100+'vw'; el.style.top='-20px';
+    el.style.background=cols[i%cols.length];
+    el.style.animationDelay=(Math.random()*.35)+'s';
+    el.style.animationDuration=(1.1+Math.random()*.9)+'s';
+    box.appendChild(el);
+    (function(e){ setTimeout(()=>e.remove(),2600); })(el);
+  }
+}
+let toastT=null;
+function toast(msg){
+  let t=$('#toast');
+  if(!t){ t=document.createElement('div'); t.id='toast';
+    t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:99;background:#1c2540;border:1px solid var(--line);padding:11px 16px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:0 12px 30px -12px #000;max-width:90vw;text-align:center';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(toastT); toastT=setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; },1900);
+}
+
+/* ==========================================================================
+   6. DIET PLAN — GULBARGA (KALABURAGI), NORTH KARNATAKA
+   Strict vegetarian. Dairy allowed. Local, seasonal, budget-first.
+   ========================================================================== */
+const CLIMATE={
+  'Mar–Jun (hot, 36–42°C)':'Eat lighter and wetter. Buttermilk, solkadhi, lemon, coconut water, curd rice, and a lot of raw onion/tomato/cucumber. Cut oil and ghee by half. Do not train 6–8 am; train after 7 pm.',
+  'Jul–Sep (monsoon)':'Ragi and jowar rotis are cheap and filling. Add methi, ambad and fresh greens, but wash well. Boil water. Curd is your best probiotic here.',
+  'Oct–Feb (cool, dry)':'Best training months. Bajra and jowar, more dry fruit (peanut, sesame), more ghee, extra rice around workouts.',
+  'Mar–Apr (pre-monsoon heat)':'Heat kills appetite. Eat small and often: 5 small meals instead of 3 big ones. Chhaas (salted buttermilk) with boondi is the local answer.'
+};
+const MEALS=[
+ {d:1,tag:'Rest / low key',items:[
+   ['Breakfast','2 ragi rotis + 1 bowl moong dal (light) + 1 tsp ghee, or 2 jowar rotis with curd and onion'],
+   ['Mid-morning','1 medium banana + 10 peanuts'],
+   ['Lunch','2 chapatis + 1 katori dal (tur/moong, 1 tsp ghee) + palak bhaji + salad + 1 katori dahi'],
+   ['Evening','Roasted chana (bhuna chana) 30 g — North Karnataka snacking habit, high protein, very cheap'],
+   ['Dinner','Vegetable khichdi (rice + moong + jeera) + chaas (chhaas) 1 glass']]},
+ {d:2,tag:'Training day',items:[
+   ['Breakfast','Vegetable poha with peanuts and a boiled Soya/chana piece, or 1 ragi dosa with coconut chutney'],
+   ['Mid-morning','1 glass milk + 1 banana'],
+   ['Lunch','3 jowar/chapati rotis + 1 katori dal + 1 katori rice + dry beans curry (chana) + salad'],
+   ['Pre-workout','1 boiled potato or 1 roti with a spoon of peanut butter (30–40 min before)'],
+   ['Dinner','Paneer bhurji (80 g paneer) or dal + bhindi, 2 rotis, cucumber raita']]},
+ {d:3,tag:'Protein day',items:[
+   ['Breakfast','1 katori sprouts salad (moong/chana) + 1 roti + chaas'],
+   ['Mid-morning','Handful of roasted chana dal (daliya) + 1 fruit (guava or papaya)'],
+   ['Lunch','2 rotis + 1 katori chana dal + 1 katori rice + bhindi masala + salad'],
+   ['Evening','1 glass milk + 2 Besan laddoos (small) or 1 katori curd'],
+   ['Dinner','Thalipeeth or 2 rotis + moong dal + sautéed methi']]},
+ {d:4,tag:'Rest / low key',items:[
+   ['Breakfast','Idli or 2 idlis with sambar + coconut chutney small, or upma with vegetables'],
+   ['Mid-morning','1 guava + 10 peanuts'],
+   ['Lunch','2 rotis + 1 katori dal + 1 katori rice + kundlikai (dry beans) + salad + dahi'],
+   ['Evening','Roasted makhana or soaked chana with lemon'],
+   ['Dinner','Vegetable daliya or bajra khichdi + chaas']]},
+ {d:5,tag:'Training day',items:[
+   ['Breakfast','2 rotis + 1 katori besan chilla + 1 glass milk'],
+   ['Mid-morning','1 banana'],
+   ['Lunch','3 rotis + 1 katori dal + 1 katori rice + palak paneer (80 g paneer) + salad'],
+   ['Pre-workout','1 roti with curd, or 1 boiled sweet potato'],
+   ['Dinner','1 katori dal + 2 rotis + lauki/tinda sabzi + salad']]},
+ {d:6,tag:'Refill / treat',items:[
+   ['Breakfast','Ragi dosa with chutney + 1 glass milk'],
+   ['Mid-morning','Seasonal fruit — mango (Apr–Jun), custard apple/sapodilla (Oct–Dec), pomegranate (Nov–Feb)'],
+   ['Lunch','2 rotis + 1 katori dal + 1 katori rice + any seasonal sabzi + salad'],
+   ['Evening','Curd rice or 1 katori curd with fruit'],
+   ['Dinner','Dal + rice (small) + sabzi — lighter end of the day']]},
+ {d:7,tag:'Rest / low key',items:[
+   ['Breakfast','2 jowar rotis + 1 katori dal + onion + lemon'],
+   ['Mid-morning','1 apple or sapodilla + handful of peanuts'],
+   ['Lunch','2 rotis + 1 katori dal + 1 katori rice + methi sabzi + salad + dahi'],
+   ['Evening','Roasted chana + chaas'],
+   ['Dinner','Vegetable soup + 2 rotis, or 1 katori moong dal khichdi']]}
+];
+const GROCERY=[
+ ['Staples (monthly, scale to size)','Jowar + ragi atta 5 kg, wheat atta 5 kg, rice 5 kg, bajra 1 kg','~₹550'],
+ ['Pulses (monthly)','Tur/arhar 2 kg, moong 2 kg, chana 2 kg, urad 1 kg, bhuna chana 1 kg','~₹800'],
+ ['Dairy (weekly)','Milk 5 L, curd 2 kg, paneer 500 g, chaas/masala curd','~₹650–750'],
+ ['Vegetables (weekly)','Onion 2 kg, tomato 1.5 kg, potato 2 kg, leafy greens 6 bunch (methi, palak, ambad, dill), ridge/bottle gourd, brinjal, ladies finger, cluster beans, drumstick, bitter gourd, green chilli, ginger, garlic, coriander, curry leaves','~₹700–900'],
+ ['Fruit (weekly)','Banana 12, seasonal local fruit 1.5 kg (guava/papaya/sapodilla/mango)','~₹350'],
+ ['Protein extras (weekly)','Sprouts/mixed grains 500 g, soya chunks or roasted chana 500 g, besan 1 kg, peanuts 500 g, sesame 250 g','~₹450'],
+ ['Extras (monthly)','Coconut 6 pcs, tamarind 250 g, jaggery 500 g, spices: turmeric, red chilli, coriander, ajwain, kalonji, saunf, hing, amchur','~₹600']
+];
+const RULES=[
+ 'Protein floor: 70–80 g/day. Vegetarian ceiling without supplements. Hit it with curd, milk, dal, sprouts/chana, besan, soya, nuts — not with chicken breast.',
+ 'One 10 g spoon of oil per person per meal. Three meals = 30 g oil/day. This is the single biggest fat-loss lever, bigger than any exercise.',
+ 'Dal at both lunch and dinner. At minimum 2 katori (≈200 ml cooked) each.',
+ '1 katori = 1 fist. Do not buy katori sets; use your fist. Gulbarga households over-plate rice and under-plate dal — invert it.',
+ 'Fruit: 2 servings max. Gulbarga mango season (April–June) is a real risk — one fruit a day, not one kilo.',
+ 'Oil for tempering goes to your parents or anyone else at home. This plan assumes you cook less oil than you are used to.',
+ 'Salt: add lemon, chaas, tamarind, curry leaves instead. Gulbarga water is already hard.',
+ 'Sun: 15 minutes morning sun, uncovered arms. Gulbarga gets it free.',
+ 'Sugar: no chai twice daily. One, unsweetened, with jaggery, small glass.',
+ 'Weigh nothing weekly if it stresses you. Same time, after the bathroom, twice a month, and only look at the trend.'
+];
+
+/* ==========================================================================
+   7. VIEWS
+   ========================================================================== */
+let VIEW='dash', ROAD_FROM=1;
+
+function trackColor(){ return TRACKS[activeTrack()].color; }
+function setTrackVar(){ document.documentElement.style.setProperty('--trk', trackColor()); }
+
+function orbSVG(pct,color){
+  const R=74, C=2*Math.PI*R;
+  return '<svg width="168" height="168" viewBox="0 0 168 168">'+
+    '<circle cx="84" cy="84" r="'+R+'" fill="none" stroke="#1a2238" stroke-width="12"/>'+
+    '<circle cx="84" cy="84" r="'+R+'" fill="none" stroke="'+color+'" stroke-width="12" stroke-linecap="round" '+
+    'stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct))+'"/>'+
+    '<circle cx="84" cy="84" r="'+R+'" fill="none" stroke="#ffffff22" stroke-width="2"/>'+
+    (pct<1?'<circle cx="84" cy="84" r="84" fill="none" stroke="#ffffff10" stroke-width="1"/>':'')+'</svg>';
+}
+function ringSVG(pct,color){
+  const R=108, C=2*Math.PI*R;
+  return '<svg width="236" height="236" viewBox="0 0 236 236">'+
+    '<circle cx="118" cy="118" r="'+R+'" fill="none" stroke="#1a2238" stroke-width="14"/>'+
+    '<circle cx="118" cy="118" r="'+R+'" fill="none" stroke="'+color+'" stroke-width="14" stroke-linecap="round" '+
+    'stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct))+'"/></svg>';
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function viewDash(){
+  refreshDay();
+  const t=TRACKS[activeTrack()], lv=currentLevel(), r=rankOf(S.level);
+  const base=S.level-1, xpIn=S.xp-totalXPUpTo(S.level), xpNeed=lv.xp;
+  const u=unlockedByTrack();
+  const nx=nextLevel();
+  return ''
+  +'<h1>Good to see you.</h1>'
+  +'<p class="mut">'+t.icon+' Tracking: <b style="color:'+t.color+'">'+t.name+'</b> — '+t.goal+'</p>'
+
+  +'<div class="card" style="margin-top:14px">'
+  + '<div class="row w" style="margin-bottom:4px">'
+  +   '<span class="pill t">RANK '+r.tier+'</span><span class="pill">'+esc(r.name)+'</span>'
+  +   '<span class="pill ok">'+S.xp+' XP</span>'
+  + '</div>'
+  + '<div class="orb">'+orbSVG(r.prog,t.color)+'<div class="mid"><div class="lvl">LEVEL</div><div class="num">'+S.level+'</div><div class="of">of 1,000</div></div></div>'
+  + '<div class="row w mut" style="margin-top:2px"><span>'+(r.next?'Next: '+esc(r.next):'Max rank')+'</span><span>'+(r.next?'@ '+r.nextAt:'—')+'</span></div>'
+  + '<div class="bar"><i style="width:'+Math.round(r.prog*100)+'%"></i></div>'
+  + '<div class="row w mut" style="margin-top:8px"><span>XP into L'+S.level+': '+xpIn+' / '+xpNeed+'</span><span>'+S.workoutsDone+' workouts</span></div>'
+  +'</div>'
+
+  +'<div class="grid3" style="margin:12px 0">'
+  + stat('🔥',S.streak,'streak')+stat('✅',S.workoutsDone,'sessions')+stat('💪',nf(S.totalReps),'reps')
+  +'</div>'
+
+  +'<div class="card">'
+  + '<div class="row w"><h2 style="margin:0">Today\'s level</h2><span class="pill t">Lv '+lv.n+'</span></div>'
+  + '<h3 style="margin:10px 0 2px">'+esc(lv.title)+'</h3>'
+  + '<p class="mut">'+esc(lv.note||PHASE_ROLE[lv.phase])+'</p>'
+  + '<div class="meta"><span class="pill">'+lv.ex.length+' moves</span><span class="pill">≈ '+mmss(lv.totalSec)+' total</span><span class="pill">+'+lv.xp+' XP</span></div>'
+  + (doneToday()?'<div class="note ok-note" style="margin-top:12px">✅ Level '+lv.n+' already logged today. Re-run it any time — extra reps still count, extra XP does not.</div>':'')
+  + '<div class="row" style="margin-top:12px;gap:8px">'
+  +   '<button class="btn grow" data-act="start" data-n="'+lv.n+'">▶ Start Level '+lv.n+'</button>'
+  +   (nx?'<button class="btn sec" data-act="peek" data-n="'+nx.n+'">Next up</button>':'')
+  + '</div>'
+  + (nx?'<p class="mut" style="margin-top:8px">Locked ahead: <b>Level '+nx.n+'</b> — '+esc(nx.ex.map(function(e){return EX[e.id].name;}).slice(0,3).join(', '))+' (+'+(nx.ex.length-3>0?nx.ex.length-3:'')+' more)</p>':'')
+  +'</div>'
+
+  +'<div class="card">'
+  + '<div class="row w"><h2 style="margin:0">Progress by goal</h2><span class="pill">'+S.level+' open</span></div>'
+  + '<div class="bar" style="margin-top:10px"><i style="width:'+(S.level/10)+'%"></i></div>'
+  + '<p class="mut">First 10 levels: '+
+      Object.keys(u).map(function(k){return TRACKS[k].short+' '+u[k];}).join(' · ')+
+    ' — then the other 990 unlock one per completed level.</p>'
+  + '<div class="row" style="gap:8px;margin-top:4px"><button class="btn sec sm" data-act="track">Switch goal track</button>'+
+    '<button class="btn sec sm" data-act="export">Backup</button></div>'
+  +'</div>'
+
+  +'<div class="card tight"><p class="mut" style="margin:0">🔥 '+esc(CLIMATE[Object.keys(CLIMATE)[0]]).slice(0,0)+'Season note: '+esc(CLIMATENOTE())+'</p></div>';
+}
+function CLIMATENOTE(){
+  const m=new Date().getMonth()+1;
+  if(m>=3&&m<=6) return CLIMATE['Mar–Jun (hot, 36–42°C)'];
+  if(m>=7&&m<=9) return CLIMATE['Jul–Sep (monsoon)'];
+  if(m>=10&&m<=12) return CLIMATE['Oct–Feb (cool, dry)'];
+  return CLIMATE['Jan–Feb (cool, dry)']||CLIMATE['Oct–Feb (cool, dry)'];
+}
+function stat(ic,v,l){ return '<div class="card tight" style="margin:0;text-align:center;padding:11px 6px"><div style="font-size:17px">'+ic+'</div><div class="big" style="font-size:19px;letter-spacing:-.5px">'+v+'</div><div class="mut" style="font-size:10px">'+l+'</div></div>'; }
+
+/* ---------------- WORKOUT ---------------- */
+function viewWork(){
+  if(!W.level){
+    const lv=currentLevel();
+    return '<h1>Train</h1>'
+      +'<div class="card"><h2>'+esc(lv.title)+'</h2><p class="mut">'+esc(lv.note||'')+'</p>'
+      +'<button class="btn" data-act="start" data-n="'+lv.n+'" style="margin-top:12px">▶ Start Level '+lv.n+'</button></div>'
+      +'<h1 style="font-size:16px">Unlocked levels</h1>'+listLevels(1,S.level,true)
+      +'<h1 style="font-size:16px">Locked</h1>'+listLevels(S.level+1,Math.min(1000,S.level+8),false);
+  }
+  const lv=W.level, e=exNow(), t=TRACKS[lv.track];
+  const d=durNow(), pct=d?1-Math.max(0,Math.round((W.endAt-Date.now())/1000))/W.total:0;
+  const col=W.phase==='rest'?'#ffc857':t.color;
+  let body='';
+
+  if(W.phase==='done'){
+    body='<div class="card" style="text-align:center"><div style="font-size:44px">🎉</div>'
+      +'<h2 style="margin-top:8px">Level '+lv.n+' complete</h2>'
+      +'<p class="mut">'+Math.round(W.sessionSec/60)+' min moved · '+nf(S.repsToday)+' reps logged today</p>'
+      +'<div class="meta" style="justify-content:center"><span class="pill ok">+'+lv.xp+' XP</span><span class="pill">'+lv.ex.length+' moves</span></div>'
+      +'<div class="row" style="gap:8px;margin-top:14px"><button class="btn grow" data-act="finish">Claim &amp; log</button>'
+      +'<button class="btn sec" data-act="quit">Skip</button></div></div>';
+  } else {
+    const exList=lv.ex.map(function(x,i){
+      const X=EX[x.id], cur=i===W.exIdx, done=i<W.exIdx;
+      let meta='';
+      if(x.mode==='hold'){
+        meta='<span class="pill">'+x.sets+' × '+x.hold+'s hold'+(X.side?' / side':'')+'</span><span class="pill">'+x.rest+'s rest</span>';
+      } else {
+        meta='<span class="pill">'+x.sets+' × '+x.reps+' reps'+(X.side?' / side':'')+'</span><span class="pill">'+x.rest+'s rest</span>';
+      }
+      let reps='';
+      if(cur && x.mode==='reps' && W.phase==='work'){
+        const cells=[];
+        for(let r=0;r<Math.min(x.reps,24);r++) cells.push('<b class="'+(r<Math.min(W.repsDone,x.reps)?'hit':'')+'">'+(r+1)+'</b>');
+        if(x.reps>24) cells.push('<b>…</b>');
+        reps='<div class="reps" id="repCells">'+cells.join('')+'</div>'
+          +'<div class="row" style="gap:6px;margin-top:8px">'
+          +'<button class="btn sec sm grow" data-act="reps" data-n="1">+1 rep</button>'
+          +'<button class="btn sec sm grow" data-act="reps" data-n="5">+5</button>'
+          +'<button class="btn sec sm grow" data-act="reps" data-n="10">+10</button>'
+          +'<button class="btn good sm grow" data-act="reps" data-n="'+x.reps+'">All '+x.reps+'</button></div>';
+      }
+      return '<div class="ex'+(done?' done':'')+(cur?' cur':'')+'">'
+        +'<div class="row w"><div class="nm">'+(cur?'▶ ':'')+esc(X.name)+'</div>'
+        +'<span class="pill">'+(i+1)+'/'+lv.ex.length+(X.gear!=='none'?' · '+X.gear:'')+'</span></div>'
+        +'<div class="cue">'+esc(X.cue)+'</div>'
+        +'<div class="meta">'+meta
+        +'<a class="pill" href="https://www.youtube.com/results?search_query='+encodeURIComponent(X.v)+'" target="_blank" rel="noopener">▶ form video</a></div>'
+        +reps+'</div>';
+    }).join('');
+
+    body='<div class="card">'
+      +'<div class="row w" style="margin-bottom:6px">'
+      +'<span class="pill t">'+esc(lv.title)+'</span>'
+      +'<span class="pill">Set '+W.setIdx+'/'+e.sets+' · Move '+(W.exIdx+1)+'/'+lv.ex.length+'</span></div>'
+      +'<div class="ring"><div class="mid">'
+      +'<div class="timer '+(W.phase==='rest'?'rest':'work')+'" style="transform:scale(.62)">'
+      +'<div class="t" id="tNum">'+(W.phase==='idle'?'--:--':mmss(d))+'</div>'
+      +'<div class="lab" id="tLab">'+phaseWord()+'</div></div>'
+      +'</div>'+ringSVG(W.phase==='idle'?0:clamp(pct,0,1),col)+'</div>'
+      +'<div style="text-align:center;margin:2px 0 6px"><b style="font-size:16px">'+esc(EX[e.id].name)+'</b>'
+      +(e.mode==='hold'?'<div class="mut">Hold '+e.hold+'s'+(EX[e.id].side?' per side':'')+'</div>'
+        :'<div class="mut">'+e.sets+' sets × '+e.reps+' reps'+(EX[e.id].side?' per side':'')+'</div>')+'</div>'
+      +'<div class="row" style="gap:8px">'
+      +(W.phase==='idle'?'<button class="btn grow" data-act="go">▶ Start</button>':
+        '<button class="btn grow" data-act="pause">'+(W.paused?'▶ Resume':'⏸ Pause')+'</button>'
+       +'<button class="btn sec sm" data-act="skip">Skip →</button>')
+      +'</div>'
+      +'<p class="mut" style="text-align:center;margin-top:8px">'+esc(EX[e.id].cue)+'</p>'
+      +'</div>'+exList;
+  }
+  return '<h1>Level '+lv.n+'</h1>'+body;
+}
+function paintTimer(){
+  const n=$('#tNum'), l=$('#tLab'); if(!n) return;
+  if(W.phase==='idle'){ n.textContent='--:--'; l.textContent='READY'; return; }
+  n.textContent=mmss(W.paused?W.left:Math.max(0,Math.round((W.endAt-Date.now())/1000)));
+  l.textContent=phaseWord();
+}
+function paintReps(){
+  const c=$('#repCells'); if(!c) return;
+  const e=exNow(); if(!e||e.mode!=='reps') return;
+  $$('b',c).forEach(function(b,i){ b.className=(i<Math.min(W.repsDone,e.reps)?'hit':''); });
+}
+
+/* ---------------- LEVELS ---------------- */
+function listLevels(a,b,open){
+  let h='';
+  for(let n=a;n<=b;n++){
+    const lv=LEVELS[n-1], t=TRACKS[lv.track], cur=n===S.level, lock=!open&&!isUnlocked(n);
+    const st=cur?S.history[String(n)]?'<span class="pill ok">done</span>':'<span class="pill t">current</span>'
+      :open?(n===S.level?'':'<span class="pill">open</span>'):'🔒';
+    h+='<div class="lv'+(cur?' cur':'')+(lock?' lock':'')+'" data-act="'+(lock?'none':'peek')+'" data-n="'+n+'">'
+      +'<div class="n">'+n+'</div>'
+      +'<div class="grow"><div class="t1">'+t.icon+' '+esc(lv.title)+'</div>'
+      +'<div class="t2">'+lv.ex.length+' moves · ≈'+mmss(lv.totalSec)+' · +'+lv.xp+' XP</div></div>'
+      +'<div class="st">'+st+'</div></div>';
+  }
+  return h||'<p class="mut">Nothing here.</p>';
+}
+function viewLevels(){
+  const r=rankOf(S.level);
+  return '<h1>1,000 Levels</h1>'
+  +'<p class="mut">Four goals × five phases × 50 rounds = 1,000 levels. Every level is generated from the same ruleset, so the curve is monotonic — and no two consecutive levels use the same exercise set.</p>'
+  +'<div class="card tight"><div class="row w"><span class="mut">Unlocked</span><b>'+S.level+' / 1,000</b></div>'
+  +'<div class="bar"><i style="width:'+(S.level/10)+'%"></i></div>'
+  +'<div class="row w mut" style="margin-top:8px"><span>Rank: '+esc(r.name)+'</span><span>'+S.workoutsDone+' completed</span></div></div>'
+  +'<h1 style="font-size:15px">Current &amp; open</h1>'+listLevels(Math.max(1,S.level-2),S.level,true)
+  +'<h1 style="font-size:15px">Next up (locked)</h1>'+listLevels(S.level+1,Math.min(1000,S.level+10),false)
+  +'<div class="card"><h2>Roadmap</h2>'
+  +'<p class="mut">Peek at what the generator produces. Level 10 is built and playable; everything past it follows the same rule engine.</p>'
+  +'<input type="range" id="roadRange" min="1" max="1000" value="'+ROAD_FROM+'" style="padding:0;margin:8px 0">'
+  +'<div class="row w mut"><span>Level '+ROAD_FROM+'</span><span id="roadEnd">Level '+Math.min(1000,ROAD_FROM+9)+'</span></div>'
+  +'<div id="roadList" style="margin-top:8px">'+roadList(ROAD_FROM)+'</div></div>'
+  +'<div class="card"><h2>Ranks</h2><table><tr><th>Tier</th><th>Rank</th><th>From level</th></tr>'
+  +RANK_LADDER.map(function(x,i){ return '<tr'+(i===r.index?' style="color:'+trackColor()+'"':'')+'><td>'+(i+1)+'</td><td><b>'+x.t+'</b></td><td>'+x.min+'</td></tr>'; }).join('')
+  +'</table></div>';
+}
+function roadList(from){
+  let h='';
+  for(let n=from;n<=Math.min(1000,from+9);n++){
+    const lv=LEVELS[n-1], t=TRACKS[lv.track], lock=!isUnlocked(n);
+    h+='<div class="lv'+(lock?' lock':'')+(n===S.level?' cur':'')+'">'
+      +'<div class="n">'+n+'</div><div class="grow"><div class="t1">'+t.icon+' '+esc(lv.title)+'</div>'
+      +'<div class="t2">'+esc(lv.ex.map(function(e){return EX[e.id].name;}).join(' · '))+'</div>'
+      +'<div class="t2">'+lv.sets+' sets each · ≈'+mmss(lv.totalSec)+' · +'+lv.xp+' XP'+(lock?' · locked':'')+'</div></div></div>';
+  }
+  return h;
+}
+
+/* ---------------- DIET ---------------- */
+function viewDiet(){
+  const t=TRACKS[activeTrack()];
+  let m='';
+  MEALS.forEach(function(d){
+    m+='<div class="card"><div class="row w"><h2 style="margin:0">Day '+d.d+'</h2><span class="pill t">'+esc(d.tag)+'</span></div>';
+    d.items.forEach(function(it){
+      m+='<div class="meal"><div class="mh"><span class="mt">'+esc(it[0])+'</span></div><div style="font-size:13.5px;line-height:1.55">'+esc(it[1])+'</div></div>';
+    });
+    m+='</div>';
+  });
+  let gr='';
+  GROCERY.forEach(function(g){
+    gr+='<tr><td><b>'+esc(g[0])+'</b></td><td>'+esc(g[1])+'</td><td style="white-space:nowrap">'+esc(g[2])+'</td></tr>';
+  });
+  return '<h1>Fuel</h1>'
+  +'<div class="card"><h2>Why this plan</h2>'
+  +'<p>Strict vegetarian, dairy allowed, <b>built for Gulbarga (Kalaburagi)</b>: jowar, ragi, bajra, tur, moong, chana, urad, groundnut, seasonal greens, and curd — all within a kilometre of most houses in the city.</p>'
+  +'<p>Goal fit: <b style="color:'+t.color+'">'+t.name+'</b> → '+esc(t.fuel)+'</p>'
+  +'<div class="meta"><span class="pill">Vegetarian</span><span class="pill">Dairy OK</span><span class="pill ok">₹150–200 / person / day</span><span class="pill">₹450–500 / person / week</span></div>'
+  +'<div class="note" style="margin-top:12px">Priced against 2025–26 North Karnataka mandi and rate-shop rates. Treat every rupee figure as an estimate and re-check locally — they move with season, and the monsoon weeks are cheapest.</div>'
+  +'</div>'
+  +'<div class="card"><h2>Season switches (Gulbarga)</h2>'
+  +Object.keys(CLIMATE).map(function(k){ return '<div class="meal"><div class="mt">'+esc(k)+'</div><div style="font-size:13px;line-height:1.55;margin-top:4px">'+esc(CLIMATE[k])+'</div></div>'; }).join('')
+  +'</div>'
+  +'<h1 style="font-size:16px">7-day plan</h1>'+m
+  +'<h1 style="font-size:16px">Weekly grocery (2 people)</h1>'
+  +'<div class="card"><table><tr><th>Basket</th><th>Items</th><th>Est.</th></tr>'+gr+'</table>'
+  +'<p class="mut">Monthly run ≈ ₹4,000–4,500 for two. That is the whole cost of the food, not a supplement budget.</p></div>'
+  +'<h1 style="font-size:16px">Rules that matter more than the menu</h1>'
+  +'<div class="card">'+RULES.map(function(r,i){ return '<div class="logd"><b>'+(i+1)+'</b><div>'+esc(r)+'</div></div>'; }).join('')+'</div>'
+  +'<div class="card"><h2>Protein, honestly</h2>'
+  +'<p>70–80 g/day from plants needs about 6 servings across the day:</p>'
+  +'<div class="meta"><span class="pill">1 katori dal ×2 = 14 g</span><span class="pill">200 g curd = 7 g</span>'
+  +'<span class="pill">500 ml milk = 16 g</span><span class="pill">80 g paneer = 18 g</span>'
+  +'<span class="pill">100 g sprouts/chana = 8 g</span><span class="pill">30 g groundnut = 8 g</span></div>'
+  +'<div class="note">You will not hit 100 g on pure vegetarian food without a supplement, and you do not need to. 80 g with consistent training builds muscle. Chasing 120 g will make you eat 3,000 calories.</div></div>';
+}
+
+/* ---------------- PROFILE ---------------- */
+function viewMe(){
+  const t=TRACKS[activeTrack()], r=rankOf(S.level);
+  const done=Object.keys(S.history).length;
+  return '<h1>You</h1>'
+  +'<div class="card"><div class="row w"><span class="pill t">'+t.icon+' '+esc(t.name)+'</span><span class="pill">Rank '+esc(r.name)+'</span></div>'
+  +'<p style="margin-top:8px">'+esc(t.goal)+'</p>'
+  +'<div class="row" style="gap:8px"><button class="btn sec sm grow" data-act="track">Change goal</button></div>'
+  +'<div style="margin-top:14px"><label class="mut">Weight (kg)</label><input id="bw" type="number" inputmode="decimal" value="'+esc(S.bw)+'" placeholder="e.g. 72" style="margin-top:4px"></div>'
+  +'<div style="margin-top:10px"><label class="mut">Height (cm)</label><input id="ht" type="number" inputmode="numeric" value="'+esc(S.height)+'" placeholder="e.g. 170" style="margin-top:4px"></div>'
+  +'<button class="btn sm" data-act="savebody" style="margin-top:10px">Save body data</button>'
+  + (S.bw&&S.height?'<p class="mut" style="margin-top:8px">BMI ≈ '+(S.weight/ (S.height/100*S.height/100)).toFixed(1)+'. In India, a BMI under 20 is often undernutrition, not fitness — read it with your doctor, not with Google.</p>':'')
+  +'</div>'
+  +'<div class="card"><h2>Stats</h2><table>'
+  +'<tr><td>Level</td><td><b>'+S.level+' / 1,000</b></td></tr>'
+  +'<tr><td>Total XP</td><td><b>'+nf(S.xp)+'</b></td></tr>'
+  +'<tr><td>Workouts logged</td><td><b>'+done+'</b></td></tr>'
+  +'<tr><td>Reps banked</td><td><b>'+nf(S.totalReps)+'</b></td></tr>'
+  +'<tr><td>Training minutes</td><td><b>'+nf(S.totalWorkoutSec)+'</b></td></tr>'
+  +'<tr><td>Streak / best</td><td><b>'+streakTxt()+' / '+(S.bestStreak||0)+'</b></td></tr>'
+  +'<tr><td>Levels per goal</td><td><b>'+Object.keys(unlockedByTrack()).map(function(k){return TRACKS[k].short+' '+unlockedByTrack()[k];}).join(' · ')+'</b></td></tr>'
+  +'</table></div>'
+  +'<div class="card"><h2>Data</h2><p class="mut">Everything lives in this browser only. No account, no server, no tracking.</p>'
+  +'<div class="row" style="gap:8px"><button class="btn sec sm grow" data-act="export">Export backup</button>'
+  +'<button class="btn sec sm grow" data-act="import">Import</button></div>'
+  +'<button class="btn ghost sm" data-act="reset" style="margin-top:8px">Reset all progress</button></div>'
+  +'<div class="card"><h2>Install as an app</h2>'
+  +'<p class="mut">Once hosted (or opened from this folder in a browser), install it for a full-screen icon with no browser chrome:</p>'
+  +'<p class="mut"><b>Android / Chrome</b> — ⋮ menu → <b>Install app</b>, or Add to Home screen.<br>'
+  +'<b>iPhone / Safari</b> — Share → <b>Add to Home Screen</b>.<br>'
+  +'<b>Desktop Chrome / Edge</b> — the install icon in the address bar.</p>'
+  +'<p class="mut">Installed, it runs offline. Your progress is stored only in this browser, so clear the icon\'s data and it is gone — export a backup from the button above.</p></div>';
+}
+
+/* ==========================================================================
+   8. RENDER + EVENTS
+   ========================================================================== */
+const VIEWS={dash:viewDash, work:viewWork, levels:viewLevels, diet:viewDiet, me:viewMe};
+function render(){
+  setTrackVar();
+  const v=$('#view'); v.innerHTML=VIEWS[VIEW]();
+  $('#xpLbl').innerHTML='LV <b>'+S.level+'</b> · <b>'+nf(S.xp)+'</b> XP';
+  $('#rail').style.width=Math.max(0.4,(S.level/10))+'%';
+  $$('nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.v===VIEW); });
+  if(VIEW==='work'&&W.level&&W.timer) paintTimer();
+  const r=$('#roadRange');
+  if(r) r.addEventListener('input',function(){ ROAD_FROM=+this.value; $('#roadEnd').textContent='Level '+Math.min(1000,ROAD_FROM+9); $('#roadList').innerHTML=roadList(ROAD_FROM); });
+}
+function go(v){ VIEW=v; stopTimer(); W.paused=false; render(); window.scrollTo(0,0); }
+
+document.addEventListener('click',function(ev){
+  const nav=ev.target.closest('nav button');
+  if(nav){ go(nav.dataset.v); return; }
+  const el=ev.target.closest('[data-act]'); if(!el) return;
+  const a=el.dataset.act;
+  if(a==='start'||a==='peek'){ const n=+el.dataset.n; if(!isUnlocked(n)){ toast('🔒 Level '+n+' is locked. Finish level '+(n-1)+' first.'); return; } startLevel(n); }
+  else if(a==='go'){ W.started=true; beginWork(); render(); }
+  else if(a==='pause'){ pauseTimer(); render(); }
+  else if(a==='skip'){ skipPhase(); render(); }
+  else if(a==='reps'){ manualRep(+el.dataset.n); }
+  else if(a==='finish'){ finishLevel(); }
+  else if(a==='quit'){ W.level=null; W.phase='idle'; stopTimer(); VIEW='levels'; render(); }
+  else if(a==='track'){ trackPicker(); }
+  else if(a==='savebody'){ S.bw=($('#bw')||{}).value||''; S.height=($('#ht')||{}).value||''; save(); toast('Saved'); render(); }
+  else if(a==='export'){ exportData(); }
+  else if(a==='import'){ importData(); }
+  else if(a==='reset'){ if(confirm('Erase all progress? This cannot be undone.')){ localStorage.removeItem(KEY); S=blank; VIEW='dash'; render(); } }
+});
+function trackPicker(){
+  const m=document.createElement('div'); m.className='modal';
+  m.innerHTML='<div class="in"><h2>Which goal are you training for?</h2>'
+   +'<p class="mut">This changes your rank colour, your fuel note, and which levels feel hardest. You can switch any time — the 1,000-level ladder is the same either way.</p>'
+   +TRACK_ORDER.map(function(k){ const t=TRACKS[k];
+     return '<div class="lv'+(S.track===k?' cur':'')+'" data-k="'+k+'" style="cursor:pointer">'
+       +'<div class="n" style="font-size:19px">'+t.icon+'</div>'
+       +'<div class="grow"><div class="t1">'+t.name+'</div><div class="t2">'+esc(t.goal)+'</div>'
+       +'<div class="t2" style="color:'+t.color+'">'+esc(t.dial)+'</div></div></div>'; }).join('')
+   +'<button class="btn ghost" data-close="1" style="margin-top:10px">Close</button></div>';
+  document.body.appendChild(m);
+  m.addEventListener('click',function(ev){
+    const c=ev.target.closest('[data-close]'); if(c){ m.remove(); return; }
+    const p=ev.target.closest('[data-k]');
+    if(p){ S.track=p.dataset.k; S.onboarded=true; save(); m.remove(); setTrackVar(); render(); toast('Track: '+TRACKS[S.track].name); }
+  });
+}
+function exportData(){
+  const txt=JSON.stringify(S);
+  const ta=document.createElement('textarea'); ta.value=txt;
+  ta.style.cssText='position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select();
+  let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard&&!ok){ navigator.clipboard.writeText(txt).then(function(){toast('Backup copied');},function(){prompt('Copy this:',txt);}); }
+  else if(ok) toast('Backup copied to clipboard');
+  else prompt('Copy this backup:',txt);
+  ta.remove();
+}
+function importData(){
+  const v=prompt('Paste your backup text:');
+  if(!v) return;
+  try{ const o=JSON.parse(v); S=Object.assign(blank,o); save(); setTrackVar(); VIEW='dash'; render(); toast('Restored'); }
+  catch(e){ toast('That backup could not be read'); }
+}
+
+/* onboarding */
+function onboard(){
+  const m=document.createElement('div'); m.className='modal';
+  m.innerHTML='<div class="in"><h2>Level 1 is the easiest thing you will ever do.</h2>'
+   +'<p class="mut">Pick your goal. Everything else — sets, reps, holds, rest, rank colour — adapts from here. You can change it in the You tab.</p>'
+   +TRACK_ORDER.map(function(k){ const t=TRACKS[k];
+     return '<div class="lv" data-k="'+k+'" style="cursor:pointer"><div class="n" style="font-size:19px">'+t.icon+'</div>'
+      +'<div class="grow"><div class="t1">'+t.name+'</div><div class="t2">'+esc(t.goal)+'</div></div></div>'; }).join('')
+   +'</div>';
+  document.body.appendChild(m);
+  m.addEventListener('click',function(ev){
+    const p=ev.target.closest('[data-k]'); if(!p) return;
+    S.track=p.dataset.k; S.onboarded=true; save(); m.remove(); setTrackVar(); render();
+  });
+}
+if(!S.track) S.track='recomp';
+setTrackVar();
+render();
+if(!S.onboarded) setTimeout(onboard,300);
+
+/* ---------- PWA: offline shell + install shortcuts ---------- */
+/* Only registers on https/http. file:// has no SW support, and the app still
+   works there (everything is in this one file). */
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+window.addEventListener('hashchange',function(){
+  const h=location.hash.replace('#','');
+  if(VIEWS[h]&&h!==VIEW){ VIEW=h; render(); window.scrollTo(0,0); }
+});
+if(location.hash){
+  const h=location.hash.replace('#','');
+  if(VIEWS[h]) setTimeout(function(){ go(h); },0);
+}
+
+</script>
+</body>
+</html>

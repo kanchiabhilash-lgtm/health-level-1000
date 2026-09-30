@@ -1,0 +1,22 @@
+{
+  "name": "Health Level 1000",
+  "short_name": "HL1000",
+  "description": "Gamified bodyweight fitness: 1,000 progressive levels, 4 goal tracks, integrated work/rest timers, and a Gulbarga vegetarian fuel plan.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "categories": ["health", "fitness", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Today's level", "short_name": "Train", "url": "./index.html#work" },
+    { "name": "Fuel plan", "short_name": "Fuel", "url": "./index.html#diet" }
+  ]
+}
