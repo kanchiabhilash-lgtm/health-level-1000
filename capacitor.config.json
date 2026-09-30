@@ -3,6 +3,12 @@
   "appName": "Health Level 1000",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": [
+      "accounts.google.com",
+      "*.firebaseapp.com",
+      "*.googleapis.com",
+      "*.gstatic.com"
+    ]
   }
 }
