@@ -1153,11 +1153,6 @@ function initFirebase(){
   }
 }
 
-function isNativeApp(){
-  return (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
-      || (location.protocol === 'capacitor:' || location.protocol === 'ionic:' || location.hostname === 'localhost');
-}
-
 function googleSignIn(){
   if(typeof firebase === 'undefined'){
     toast('Connecting to Firebase...');
@@ -1172,48 +1167,94 @@ function googleSignIn(){
   if(!fbAuth){
     initFirebase();
   }
-  if(!fbAuth){
-    toast('Initializing login engine...');
-    return;
-  }
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope('profile');
-  provider.addScope('email');
+
   syncStatus = 'syncing';
   render();
 
-  if(isNativeApp()){
-    fbAuth.signInWithRedirect(provider).catch(function(err){
-      console.error('Native redirect error:', err);
-      fbAuth.signInWithPopup(provider).then(function(res){
-        fbUser = res.user;
-        toast('Welcome, ' + (fbUser.displayName || fbUser.email));
-        cloudPull();
-      }).catch(function(e2){
-        toast('Google sign-in: ' + (e2.message || err.message));
+  // 1. Native Android App: 1-Tap Google Account Picker
+  const isCapacitorNative = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeGoogleAuth;
+  if(isCapacitorNative){
+    window.Capacitor.Plugins.NativeGoogleAuth.signIn({
+      serverClientId: cfg.webClientId || ""
+    }).then(function(nativeUser){
+      if(nativeUser && nativeUser.idToken && fbAuth){
+        const credential = firebase.auth.GoogleAuthProvider.credential(nativeUser.idToken);
+        fbAuth.signInWithCredential(credential).then(function(res){
+          fbUser = res.user;
+          toast('Welcome, ' + (fbUser.displayName || fbUser.email));
+          cloudPull();
+          render();
+        }).catch(function(credErr){
+          console.warn('Credential signin fallback:', credErr);
+          handleNativeUserFallback(nativeUser);
+        });
+      } else {
+        handleNativeUserFallback(nativeUser);
+      }
+    }).catch(function(err){
+      console.error('Native Google Sign-In error:', err);
+      toast(err && err.message ? err.message : 'Sign-in cancelled');
+      syncStatus = 'error';
+      render();
+    });
+    return;
+  }
+
+  // 2. Web Browser: standard Google popup/redirect
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.addScope('profile');
+  provider.addScope('email');
+  fbAuth.signInWithPopup(provider).then(function(res){
+    fbUser = res.user;
+    toast('Welcome, ' + (fbUser.displayName || fbUser.email));
+    cloudPull();
+  }).catch(function(err){
+    console.error('Web Sign in error:', err);
+    if(err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user'){
+      fbAuth.signInWithRedirect(provider).catch(function(e2){
+        toast('Login: ' + e2.message);
         syncStatus = 'error';
         render();
       });
+    } else {
+      toast('Login: ' + err.message);
+      syncStatus = 'error';
+      render();
+    }
+  });
+}
+
+function handleNativeUserFallback(nativeUser){
+  fbUser = {
+    uid: 'google_' + (nativeUser.id || nativeUser.email.replace(/[^a-zA-Z0-9]/g, '_')),
+    displayName: nativeUser.displayName || nativeUser.email.split('@')[0],
+    email: nativeUser.email,
+    photoURL: nativeUser.photoUrl || ''
+  };
+  toast('Signed in as ' + (nativeUser.displayName || nativeUser.email));
+  cloudPull();
+  render();
+}
+
+function googleSignOut(){
+  if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeGoogleAuth){
+    window.Capacitor.Plugins.NativeGoogleAuth.signOut().catch(function(){});
+  }
+  if(fbAuth){
+    fbAuth.signOut().then(function(){
+      fbUser = null;
+      syncStatus = 'idle';
+      toast('Signed out');
+      render();
+    }).catch(function(){
+      fbUser = null;
+      syncStatus = 'idle';
+      render();
     });
   } else {
-    fbAuth.signInWithPopup(provider).then(function(res){
-      fbUser = res.user;
-      toast('Welcome, ' + (fbUser.displayName || fbUser.email));
-      cloudPull();
-    }).catch(function(err){
-      console.error('Sign in popup error:', err);
-      if(err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user'){
-        fbAuth.signInWithRedirect(provider).catch(function(e2){
-          toast('Login: ' + e2.message);
-          syncStatus = 'error';
-          render();
-        });
-      } else {
-        toast('Login: ' + err.message);
-        syncStatus = 'error';
-        render();
-      }
-    });
+    fbUser = null;
+    syncStatus = 'idle';
+    render();
   }
 }
 
